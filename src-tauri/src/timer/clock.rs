@@ -1,0 +1,79 @@
+//! Fontes de tempo da engine. Ver `docs/TIMER_ENGINE.md` ("Tempo").
+
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
+
+/// Leitura simultânea dos dois relógios.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Tick {
+    /// Relógio monotônico, em ms desde uma origem arbitrária do processo.
+    /// É o único usado para medir tempo decorrido.
+    pub mono_ms: u64,
+    /// Relógio de calendário, em ms desde a época Unix (UTC). Usado para
+    /// carimbar registros e para detectar suspensão; pode saltar.
+    pub wall_ms: i64,
+}
+
+pub trait Clock: Send + Sync {
+    fn now(&self) -> Tick;
+}
+
+pub struct SystemClock {
+    origin: Instant,
+}
+
+impl SystemClock {
+    pub fn new() -> Self {
+        Self {
+            origin: Instant::now(),
+        }
+    }
+}
+
+impl Clock for SystemClock {
+    fn now(&self) -> Tick {
+        let wall = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|since_epoch| since_epoch.as_millis())
+            .unwrap_or(0);
+        Tick {
+            mono_ms: u64::try_from(self.origin.elapsed().as_millis()).unwrap_or(u64::MAX),
+            wall_ms: i64::try_from(wall).unwrap_or(i64::MAX),
+        }
+    }
+}
+
+#[cfg(test)]
+pub mod fake {
+    use std::sync::Mutex;
+
+    use super::{Clock, Tick};
+
+    /// Relógio controlado pelos testes: o tempo só passa quando mandado.
+    pub struct FakeClock(Mutex<Tick>);
+
+    impl FakeClock {
+        pub fn new() -> Self {
+            Self(Mutex::new(Tick {
+                mono_ms: 1_000,
+                wall_ms: 1_800_000_000_000,
+            }))
+        }
+
+        /// Avança os dois relógios, como no funcionamento normal.
+        pub fn advance_ms(&self, ms: u64) {
+            let mut tick = self.0.lock().unwrap();
+            tick.mono_ms += ms;
+            tick.wall_ms += ms as i64;
+        }
+
+        pub fn advance_secs(&self, secs: u64) {
+            self.advance_ms(secs * 1_000);
+        }
+    }
+
+    impl Clock for FakeClock {
+        fn now(&self) -> Tick {
+            *self.0.lock().unwrap()
+        }
+    }
+}
