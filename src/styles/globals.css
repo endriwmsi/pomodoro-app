@@ -1,0 +1,243 @@
+@import 'tailwindcss';
+
+/* `matrix:` aplica uma classe apenas no template "Matriz" (ver docs/THEMING.md). */
+@custom-variant matrix (&:where([data-template='matrix'], [data-template='matrix'] *));
+
+/*
+ * Tokens do template padrão ("glass"). Cada template adicional sobrescreve
+ * estes valores em um bloco :root[data-template='…'] mais abaixo.
+ */
+@theme {
+  /* Fontes do sistema: nada é baixado, o app funciona offline. */
+  --font-sans: 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'Cascadia Mono', 'Cascadia Code', Consolas, monospace;
+
+  --color-shell: #000000;
+  /* Vidro fumê: escuro e translúcido, com um brilho suave no canto superior esquerdo. */
+  --color-panel: rgb(22 22 25 / 0.56);
+  --color-panel-strong: rgb(12 12 14 / 0.7);
+  --color-panel-border: rgb(255 255 255 / 0.11);
+  /* Fundo opaco de menus suspensos (não pode ser translúcido como os painéis). */
+  --color-popover: #1c1c20;
+  --color-ink: rgb(255 255 255 / 0.96);
+  --color-ink-muted: rgb(255 255 255 / 0.66);
+  --color-accent: #f5c251;
+  --color-accent-ink: #1c1503;
+  /* Prioridade das tarefas: a alta usa sempre a cor de destaque do template. */
+  --color-priority-low: #60a5fa;
+  /* No Vidro o destaque já é âmbar; a média usa verde para não se confundir com a alta. */
+  --color-priority-medium: #86efac;
+  --color-priority-high: var(--color-accent);
+  /* Ícones do clima, sempre sobre o fundo escuro do notch. */
+  --color-weather-sun: #fb9a1e;
+  --color-weather-moon: #fde68a;
+  --color-weather-cloud: #e4e4e7;
+  --color-weather-cloud-dark: #8b8b94;
+  --color-weather-rain: #38bdf8;
+  --color-weather-snow: #e0f2fe;
+  --color-weather-bolt: #facc15;
+
+  --radius-panel: 18px;
+  --radius-card: 22px;
+}
+
+:root {
+  --panel-backdrop: blur(28px) saturate(1.2);
+  --panel-highlight: linear-gradient(
+    140deg,
+    rgb(255 255 255 / 0.13) 0%,
+    rgb(255 255 255 / 0.03) 38%,
+    rgb(255 255 255 / 0) 100%
+  );
+  --panel-shadow: 0 18px 40px rgb(0 0 0 / 0.26), inset 0 1px 0 rgb(255 255 255 / 0.07);
+  --scrollbar-thumb: rgb(255 255 255 / 0.28);
+  --scrollbar-thumb-hover: rgb(255 255 255 / 0.5);
+}
+
+:root[data-template='matrix'] {
+  --font-sans: var(--font-mono);
+  --font-display: var(--font-mono);
+
+  --color-panel: #19191b;
+  --color-panel-strong: #101012;
+  --color-panel-border: rgb(255 255 255 / 0.07);
+  --color-popover: #101012;
+  --color-ink: #f4f3ee;
+  --color-ink-muted: rgb(244 243 238 / 0.55);
+  --color-accent: #ff5a36;
+  --color-accent-ink: #ffffff;
+  --color-priority-medium: #facc15;
+
+  --radius-card: 16px;
+  --panel-backdrop: none;
+  --panel-highlight: none;
+  --panel-shadow: 0 12px 28px rgb(0 0 0 / 0.28);
+  --scrollbar-thumb: rgb(244 243 238 / 0.22);
+  --scrollbar-thumb-hover: var(--color-accent);
+}
+
+@layer components {
+  /* Superfície de conteúdo; a aparência vem inteiramente dos tokens do template. */
+  .panel {
+    border: 1px solid var(--color-panel-border);
+    border-radius: var(--radius-card);
+    background-color: var(--color-panel);
+    background-image: var(--panel-highlight);
+    box-shadow: var(--panel-shadow);
+    backdrop-filter: var(--panel-backdrop);
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--color-shell);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/*
+ * Barras de rolagem no estilo do template. Só as regras ::-webkit-scrollbar são
+ * usadas: definir `scrollbar-color` faria o WebView2 ignorá-las.
+ */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  /* A borda transparente deixa o polegar fino e afastado da margem. */
+  border: 4px solid transparent;
+  border-radius: 999px;
+  background-color: var(--scrollbar-thumb);
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:active {
+  background-color: var(--scrollbar-thumb-hover);
+}
+
+/*
+ * Cor do notch: preto por padrão, em qualquer template. No tema claro o fundo
+ * vira branco e as cores `white` e `black` do Tailwind trocam de papel dentro
+ * da janela do notch — todo o conteúdo dele é escrito como `text-white/NN` e
+ * `bg-white/NN`, e assim se inverte sem tocar nos componentes.
+ */
+html[data-window='notch'] {
+  --notch-surface: #000;
+}
+
+html[data-window='notch'][data-notch-theme='light'] {
+  --notch-surface: #fff;
+  --color-white: #131316;
+  --color-black: #fff;
+  /* Sobre branco, nuvens, lua e neve precisam de mais contraste. */
+  --color-weather-cloud: #a1a1aa;
+  --color-weather-cloud-dark: #52525b;
+  --color-weather-moon: #eab308;
+  --color-weather-snow: #7dd3fc;
+}
+
+/* O âmbar do Vidro some sobre branco; o laranja do Matriz não precisa de ajuste. */
+html[data-window='notch'][data-notch-theme='light']:not([data-template='matrix']) {
+  --color-accent: #c98500;
+  --color-accent-ink: #fff;
+}
+
+/* Janela do notch: só o próprio notch é pintado. */
+html[data-window='notch'] body {
+  background: transparent;
+}
+
+/* Campos numéricos usam as setas do componente NumberInput, não as do navegador. */
+input[type='number'] {
+  appearance: textfield;
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  margin: 0;
+  appearance: none;
+}
+
+/*
+ * Movimento "de mola" do seletor e das abas do notch: passa um pouco do ponto
+ * e volta, como algo arrastado com o dedo.
+ */
+.notch-spring {
+  transition:
+    transform 460ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 220ms ease-out,
+    color 220ms ease-out;
+}
+
+/* Controle de volume da aba de música. */
+.notch-range {
+  appearance: none;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.18);
+}
+
+.notch-range::-webkit-slider-thumb {
+  width: 11px;
+  height: 11px;
+  appearance: none;
+  border-radius: 999px;
+  background: #fff;
+}
+
+/* Os ícones somem suavemente nas pontas do seletor em vez de serem cortados. */
+.notch-rail-window {
+  mask-image: radial-gradient(ellipse at center, #000 45%, transparent 78%);
+}
+
+/* Corpo do notch e abas côncavas que o ligam à borda (ver src/notch/shape.ts). */
+.notch-body {
+  background-color: var(--notch-surface);
+  transition:
+    width 180ms ease-out,
+    height 180ms ease-out,
+    border-radius 180ms ease-out;
+}
+
+.notch-flare {
+  flex: none;
+  /* Quadrado da cor do notch com um quarto de círculo vazado: o que sobra é a curva. */
+  background: radial-gradient(
+    circle farthest-side at var(--flare-center),
+    transparent calc(100% - 0.75px),
+    var(--notch-surface) 100%
+  );
+  transition:
+    width 180ms ease-out,
+    height 180ms ease-out;
+}
+
+/* Plano de fundo usado enquanto nenhuma imagem é fornecida em src/assets/. */
+.app-background-fallback {
+  background: linear-gradient(180deg, #7fa3ae 0%, #9db7b8 38%, #c9c6a8 72%, #d9c08d 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
