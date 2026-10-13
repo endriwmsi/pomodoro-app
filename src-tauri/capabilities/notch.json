@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "notch",
+  "description": "Permissões da janela do notch: apenas ouvir eventos do backend (timer e configurações).",
+  "windows": ["notch"],
+  "permissions": ["core:event:allow-listen", "core:event:allow-unlisten"]
+}
