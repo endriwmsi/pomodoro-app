@@ -10,8 +10,8 @@
 ; --- Boas-vindas e conclusão -------------------------------------------------
 !define MUI_WELCOMEPAGE_TITLE "Instalar o Compasso"
 !define MUI_WELCOMEPAGE_TEXT "O Compasso reúne Pomodoro configurável, quadro Kanban, painel de estatísticas e um notch retrátil na borda da tela.$\r$\n$\r$\nTotalmente local: seus dados ficam em um arquivo neste computador. Não há conta, servidor, anúncios nem rastreamento de uso. A única função que usa a internet é a previsão do tempo, opcional e desligada por padrão.$\r$\n$\r$\nÉ um projeto de código aberto, sob a licença MIT.$\r$\n$\r$\nClique em Próximo para continuar."
-!define MUI_FINISHPAGE_LINK "Autor: github.com/endriwmsi"
-!define MUI_FINISHPAGE_LINK_LOCATION "https://github.com/endriwmsi"
+!define MUI_FINISHPAGE_LINK "Código-fonte: github.com/endriwmsi/pomodoro-app"
+!define MUI_FINISHPAGE_LINK_LOCATION "https://github.com/endriwmsi/pomodoro-app"
 
 ; --- Página "Conheça o Compasso" ---------------------------------------------
 Var CompassoPreviewImage

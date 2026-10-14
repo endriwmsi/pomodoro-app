@@ -1,0 +1,86 @@
+# Gera os instaladores e publica uma Release quando uma tag de versão é
+# enviada (v0.2.0). Ver docs/RELEASING.md.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  # A tag precisa bater com a versão dos arquivos: senão os instaladores sairiam
+  # com um número e a Release com outro.
+  version:
+    name: Conferir a versão
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: A tag é a versão do projeto
+        run: |
+          package="$(node -p "require('./package.json').version")"
+          cargo="$(grep -m1 '^version = ' src-tauri/Cargo.toml | cut -d'"' -f2)"
+          tag="${GITHUB_REF_NAME#v}"
+          echo "tag=$tag package.json=$package Cargo.toml=$cargo"
+          if [ "$tag" != "$package" ] || [ "$tag" != "$cargo" ]; then
+            echo "::error::A tag $GITHUB_REF_NAME não corresponde à versão do projeto. Rode 'npm run release:version -- $tag' e crie a tag de novo."
+            exit 1
+          fi
+
+  build:
+    name: ${{ matrix.name }}
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+            args: --bundles nsis
+          - name: Linux
+            os: ubuntu-22.04
+            args: --bundles deb,rpm,appimage
+          - name: macOS (Apple Silicon)
+            os: macos-latest
+            target: aarch64-apple-darwin
+            args: --target aarch64-apple-darwin --bundles app,dmg
+          - name: macOS (Intel)
+            os: macos-latest
+            target: x86_64-apple-darwin
+            args: --target x86_64-apple-darwin --bundles app,dmg
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependências do sistema (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          key: ${{ matrix.target }}
+      - run: npm ci
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: Compasso ${{ github.ref_name }}
+          releaseBody: |
+            Veja o que mudou no [CHANGELOG](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CHANGELOG.md).
+
+            **Windows** é a plataforma principal. As versões para **Linux** e **macOS** são experimentais: compilam e passam nos testes, mas a aba de música, o volume por aplicativo, a localização do clima e o som de aviso só existem no Windows, e o notch não foi verificado nesses sistemas.
+
+            Os instaladores não são assinados: o Windows SmartScreen e o Gatekeeper do macOS mostram um aviso ao abrir.
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.args }}
