@@ -75,6 +75,13 @@
 | `src-tauri/src/weather/mod.rs` | Códigos de condição, URL com coordenadas arredondadas, horas pedidas, leitura de um e de vários lugares (com a previsão por hora), respostas malformadas, distância entre pontos, nome do lugar pela capital próxima, consulta do nome da cidade (URL, resposta, uma vez por lugar, nova tentativa após falha, nunca nas capitais), função desligada sem requisição, capitais e localização, limite de 15 minutos, dados antigos após falha, erro de rede, troca de preferência, contrato JSON — **sem acessar a rede** (provedor e localização simulados) |
 | `src-tauri/src/media/mod.rs` | Contrato JSON, nomes das ações, volume fora da faixa recusado, posição na faixa (avança tocando, parada em pausa, limitada à duração, data de atualização inválida); e uma consulta **real** à sessão de mídia do Windows (só exige que não falhe) |
 | `src/notch/NotchApp.test.tsx` (música e clima) | Aba de clima só com a função ligada, previsão por localização, capitais e dados desatualizados, sem conexão com nova tentativa, troca de capital pelas setas, abertura na aba em que estava mesmo com música tocando, controles e volume, barra de progresso (avanço pelo relógio, mudança de posição, pausada, sem permissão, sem duração), player empilhado com volume deitado nas laterais, consulta periódica só com o painel aberto |
+| `src-tauri/src/routines/mod.rs` e `store.rs` | Horário local (dia, dia da semana, antes da época), validação campo a campo, sobreposição de rotinas, horizonte (âncora, rotina em andamento, desligadas/puladas/outro dia, expediente dentro e fora), CRUD, conflito de horário, rotina inexistente |
+| `src-tauri/src/timer/engine.rs` (rotinas) | Foco curto antes da âncora, foco inteiro quando cabe, pausa que absorve a sobra, mínimo de 1 minuto, rotina pausa e retoma o foco, foco quase no fim termina antes, pausa cede a vez, timer parado segue parado, pausa manual cancela a retomada, nada começa fora do expediente |
+| `src-tauri/src/timer/mod.rs` (rotinas) | Foco termina no início da rotina e o trabalho volta depois dela, contagem da rotina a cada segundo, pular vale só hoje, iniciar dispensa a rotina, último foco termina com o expediente e o aviso não se repete, intervalos do ticker |
+| `src-tauri/src/background.rs` | Formato pelo conteúdo, guardar e ler, substituição, recusa do que não é imagem (mantendo a anterior), limite de tamanho, arquivo corrompido ignorado |
+| `src/features/routines/RoutinesPage.test.tsx` | Horários e dias (conversões, rótulos, rotinas do dia, próxima rotina), lista, criar pelo diálogo, validação local e do backend, editar/desligar/excluir, expediente, faixa do dia |
+| `src/features/settings/BackgroundPicker.test.tsx` | Resolução da escolha em imagem (padrão, embutida, do usuário, removida), grade, envio, recusa do backend, arquivo grande demais |
+
 | `src/features/settings/GeneralSection.test.tsx` | Opção de iniciar com o Windows: desligada por padrão, gravação da escolha, erro do backend sem mudar a opção |
 
 O arrastar e soltar em si não é testado no jsdom (sem layout): testa-se a função que decide o
@@ -83,7 +90,7 @@ destino e os controles alternativos.
 Os testes do timer não esperam tempo real: o relógio é injetado (`timer/clock.rs`, `FakeClock`).
 A exceção é um teste da thread do ticker, que espera no máximo alguns décimos de segundo.
 
-Última execução completa (`npm run check`, 2026-10-13): 120 testes de frontend e 174 de Rust
+Última execução completa (`npm run check`, 2026-10-13): 144 testes de frontend e 215 de Rust
 passando; typecheck, ESLint, Prettier, rustfmt e Clippy sem ocorrências.
 
 ## Roteiro manual — janela principal
@@ -265,6 +272,9 @@ Observado em 2026-10-13 no executável de release.
 | 18  | Notch na lateral direita, expandido (260 × 428): aba Timer e player compacto com progresso abaixo                                                           | OK (captura)                                                                                                                                 |
 | 19  | Aba Música na lateral: player empilhado, volume deitado abaixo dos controles                                                                                | **Não verificado no aplicativo real** — a automação não conseguiu abrir o painel nas tentativas seguintes; coberto por teste de componente   |
 | 20  | Nome "Região de …" perto de uma capital; setas de troca de capital                                                                                          | Não verificado no aplicativo real (testes de Rust e de componente)                                                                           |
+| 24  | Templates Sinal e Relevo no dashboard, com dados de exemplo                                                                                                 | OK (capturas `docs/images/tema-sinal.png` e `tema-relevo.png`); as demais telas nesses templates não foram vistas                            |
+| 25  | Notch com o player compacto mais largo (628 × 216), abas Timer e Tarefas mais cheias                                                                        | OK (capturas `docs/images/notch-*.png`)                                                                                                      |
+| 26  | Aplicativo aberto sobre um banco de exemplo (`COMPASSO_DATA_DIR` + `scripts/demo-data.mjs`)                                                                 | OK — dashboard, Kanban, Pomodoro, Rotina e Configurações com os dados gerados                                                                |
 | 22  | Instalador: páginas de apresentação, boas-vindas, licença e pasta de destino, em português                                                                  | OK (capturas em `docs/images/instalador-*.png`); a instalação não foi executada                                                              |
 | 23  | Notch aberto pelo mouse real; troca de aba pela roda (Timer → Tarefas → Música → Clima)                                                                     | OK — o cursor foi posicionado sobre o puxador e a roda girada de verdade (capturas em `docs/images/notch-*.png`)                             |
 | 21  | Iniciar com o Windows: marcar a opção, sair e entrar na sessão                                                                                              | **Não verificado** — nem a gravação no registro nem a abertura no login foram exercitadas                                                    |

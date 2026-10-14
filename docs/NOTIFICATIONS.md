@@ -40,6 +40,19 @@ Os avisos acontecem depois de o estado estar gravado e são "melhor esforço":
   sistema; um erro é apenas registrado;
 - se as preferências não puderem ser lidas do banco, usam-se os padrões (ambos ligados).
 
+## Rotinas e expediente
+
+Com o aplicativo aberto no momento, e respeitando as mesmas preferências de som e notificação:
+
+| Quando             | Som               | Notificação                                                            |
+| ------------------ | ----------------- | ---------------------------------------------------------------------- |
+| Uma rotina começa  | o do fim de foco  | Título: o nome da rotina. Texto: a duração e que o timer volta ao foco |
+| O expediente acaba | o do fim de pausa | "Expediente encerrado"                                                 |
+
+Cada aviso acontece uma vez por ocorrência (`Notifier::routine_started` e
+`Notifier::workday_ended`, chamados pelo serviço do timer na passagem). Ver
+[ROUTINES.md](ROUTINES.md).
+
 ## Som
 
 `notifications/sound.rs`. **Não há arquivos de áudio**: os dois sons são sintetizados em

@@ -64,8 +64,9 @@ música" para "Volume do sistema").
 
 - **O player aparece em todas as abas.** Nas abas Timer, Tarefas e Clima há um **player
   compacto** (`MiniPlayer`) à direita do conteúdo (abaixo, quando o notch está em uma lateral):
-  capa pequena, título, artista, anterior/tocar-pausar/próxima e o progresso da faixa (barra
-  sem os tempos, que também aceita arraste).
+  capa, título, artista, anterior/tocar-pausar/próxima e o progresso da faixa, que também
+  aceita arraste. No topo ele ocupa uma coluna de 160 px, com a capa maior e os tempos da faixa;
+  nas laterais, uma linha, com a barra sem os tempos.
 - **Na aba Música aparece só o player completo** (`MediaTab`) e o notch fica menor (layout
   `compact`, ver [WINDOW_MANAGER.md](WINDOW_MANAGER.md#geometria-e-posição)): capa, título e
   artista centralizados, os cinco controles (aleatório, anterior, tocar/pausar, próxima,

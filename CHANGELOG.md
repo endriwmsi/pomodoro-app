@@ -108,6 +108,27 @@ Mudanças relevantes para usuários e desenvolvedores. Formato inspirado em
 - **Cor do notch** (Configurações → Notch → Cor): preto, branco ou seguir o modo claro ou
   escuro do Windows (`notch.theme`; o padrão é seguir o sistema). A cor não depende do template; um notch de
   vidro com desfoque foi experimentado e descartado.
+- **Dois templates novos**: **Sinal** (painel de telemetria: quase preto, rótulos monoespaçados
+  e blocos verdes) e **Relevo** (claro e macio, em neumorfismo, sem imagem de fundo).
+- Aba Timer do notch com os pontos do ciclo e uma barra de progresso da sessão.
+- `scripts/demo-data.mjs`: cria um banco de exemplo em uma pasta à parte; a variável
+  `COMPASSO_DATA_DIR` faz o aplicativo usar essa pasta. Capturas do README e imagens do
+  instalador refeitas com esses dados.
+
+- **Rotinas e expediente** (tela Rotina): atividades em horário fixo que se repetem ("Hora do
+  café") e um horário de expediente opcional. O timer encaixa os ciclos nesses horários: o foco
+  antes de uma rotina é encurtado para terminar na hora, a pausa absorve sobras pequenas, o
+  último foco termina com o expediente e nada começa sozinho fora dele. Durante a rotina o
+  timer espera (o foco em andamento é pausado e retomado sozinho) e há "Pular a rotina". Focos
+  encurtados contam tempo, mas não somam pomodoro. Avisos ao começar uma rotina e ao fim do
+  expediente. Migration `0005`; comandos `routines_list`, `routine_create`, `routine_update`,
+  `routine_delete`, `routine_skip`; evento `routines:changed`; `TimerSnapshot` ganhou
+  `routineId`, `routineRemainingMs` e `short`; documento `docs/ROUTINES.md`.
+- **Imagem de fundo configurável** (Configurações): escolha entre as imagens que vêm com o
+  aplicativo, nenhuma, ou envie a sua (PNG, JPEG ou WebP de até 12 MB), que é copiada para os
+  dados do Compasso. Comandos `background_get_custom` e `background_set_custom`; configuração
+  `appearance.background`.
+
 - **Instalador personalizado**, em português: página de apresentação com capturas do
   aplicativo, boas-vindas explicando que tudo é local e sem rastreamento, licença MIT, barra
   lateral e cabeçalho com a identidade do Compasso e link do autor na conclusão.
@@ -123,6 +144,14 @@ Mudanças relevantes para usuários e desenvolvedores. Formato inspirado em
   100 km de uma capital, ou "Sua localização". `WeatherPlace` ganhou `detail`.
 
 ### Alterado
+
+- **Notch mais largo no topo** (628 × 216): o player compacto passou a ocupar 160 px, com capa
+  maior e os tempos da faixa. Na aba Timer os controles ficam junto do relógio, e na aba
+  Tarefas as linhas são maiores e centralizadas na altura.
+
+- A imagem de fundo embutida mudou de `src/assets/background.*` para a pasta
+  `src/assets/backgrounds/`; novas imagens entram só por estarem lá.
+- `Settings` deixou de ser `Copy` no backend (a escolha do fundo carrega um nome).
 
 - **O notch não pula mais para a aba Música** quando há algo tocando: abre sempre na aba em que
   estava (o player já aparece em todas).

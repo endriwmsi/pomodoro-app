@@ -13,7 +13,7 @@ Código: `src-tauri/src/analytics/` (consultas), `src/lib/calendar.ts` (calendá
 
 | Indicador                | Definição                                                                                                                                        |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Pomodoros concluídos** | Sessões de **foco** com desfecho `completed` que **terminaram** hoje                                                                             |
+| **Pomodoros concluídos** | Sessões de **foco** com desfecho `completed`, sem contar os focos curtos (`short`), que **terminaram** hoje                                      |
 | **Tempo de foco**        | Soma do **tempo efetivo** (`elapsed_ms`) de **todas** as sessões de foco que terminaram hoje — concluídas, puladas, reiniciadas ou interrompidas |
 | **Tarefas concluídas**   | Tarefas cuja data de conclusão (`completed_at_ms`) cai hoje                                                                                      |
 | **Tarefas em andamento** | Tarefas na coluna "Em andamento" **agora** (não depende do dia)                                                                                  |
@@ -152,3 +152,9 @@ Não há atualização periódica: com um foco rodando, os números só mudam qu
   sequências ou comparações entre semanas.
 - Não há exportação dos dados.
 - Na pré-visualização do navegador (fora do aplicativo) os indicadores ficam sem valor.
+
+## Focos curtos
+
+Um foco encurtado para caber antes de uma rotina ou do fim do expediente
+(`pomodoro_sessions.short = 1`, ver [ROUTINES.md](ROUTINES.md)) entra no **tempo de foco**, mas
+não em **pomodoros concluídos** — nem no dashboard, nem na contagem por tarefa do Kanban.

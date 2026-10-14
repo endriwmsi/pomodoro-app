@@ -260,6 +260,43 @@ semanal com o dia atual em destaque e os totais da semana.
       laterais o seletor fica em pé e as abas deslizam na vertical
 - [ ] Ver a animação do seletor com o mouse real
 
+## Rotinas e expediente (implementadas; verificação no aplicativo pendente)
+
+Ver [ROUTINES.md](ROUTINES.md).
+
+- [x] Rotinas diárias (nome, horário, duração, dias da semana), persistidas (migration `0005`)
+- [x] Expediente opcional nas configurações
+- [x] Encaixe dos ciclos: foco curto antes da âncora, pausa que absorve a sobra, último foco
+      terminando com o expediente
+- [x] A rotina ocupa o timer: pausa e retoma o foco, substitui a pausa; "Pular a rotina"
+- [x] Foco curto conta tempo, mas não soma pomodoro
+- [x] Nada começa sozinho fora do expediente; o timer segue utilizável manualmente
+- [x] Avisos ao começar uma rotina e ao fim do expediente
+- [x] Tela Rotina (expediente, faixa do dia, lista) e indicação no Pomodoro e no notch
+- [x] Verificado no executável: a migration foi aplicada sobre o banco existente e a tela abre
+- [ ] **Comportamento ao vivo no aplicativo real** — criar uma rotina, vê-la começar, o foco
+      pausar e voltar, pular, os avisos e o fim do expediente só foram exercitados por testes
+      automatizados (relógio simulado)
+- [ ] Pomodoros previstos na faixa do dia
+- [ ] No dashboard, o foco do dia em relação ao que o expediente comporta
+- [ ] Expediente diferente por dia da semana; rotinas que atravessam a meia-noite
+
+## Imagem de fundo configurável ✅ (envio de imagem não verificado)
+
+- [x] Escolha entre as imagens embutidas (`src/assets/backgrounds/`), nenhuma ou a do usuário
+- [x] Envio de imagem própria, copiada para os dados do aplicativo
+- [x] Verificado no executável: a grade aparece em Configurações com a imagem atual selecionada
+- [ ] **Enviar uma imagem e trocar de fundo no aplicativo real** — só testes automatizados
+
+## Templates Sinal e Relevo; ajustes do notch; dados de exemplo ✅ (verificação parcial)
+
+- [x] Template **Sinal** (telemetria, verde) e template **Relevo** (claro, neumorfismo)
+- [x] Notch: player compacto mais largo, aba Timer com ciclo e progresso, aba Tarefas mais cheia
+- [x] `scripts/demo-data.mjs` e `COMPASSO_DATA_DIR`: banco de exemplo sem tocar nos dados reais
+- [x] Capturas do README e imagens do instalador refeitas com os dados de exemplo
+- [ ] Rever Kanban, diálogos e Configurações nos templates Sinal e Relevo (só o dashboard foi
+      conferido)
+
 ## Fase 8 — Polimento e distribuição (parcial)
 
 - [x] Instalador personalizado (apresentação com capturas, textos, licença MIT, imagens) —

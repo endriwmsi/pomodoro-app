@@ -110,7 +110,7 @@ Tamanho da janela, em pixels lógicos:
 | Estado                                              | No topo (largura × altura) | Nas laterais (largura × altura) |
 | --------------------------------------------------- | -------------------------- | ------------------------------- |
 | Recolhido (`collapsed`)                             | 148 × 12                   | 12 × 148                        |
-| Expandido (`expanded`): uma aba e o player compacto | 588 × 216                  | 260 × 428                       |
+| Expandido (`expanded`): uma aba e o player compacto | 628 × 216                  | 260 × 428                       |
 | Compacto (`compact`): só o player, na aba Música    | 428 × 216                  | 260 × 388                       |
 
 `geometry(monitor, position, layout)` converte para pixels físicos com a escala do monitor
@@ -137,7 +137,7 @@ da tela e o corpo. `src/notch/shape.ts` descreve a forma em relação à borda:
 
 | Medida   | Significado                               | Recolhido | Expandido (topo / lateral)              |
 | -------- | ----------------------------------------- | --------- | --------------------------------------- |
-| `along`  | comprimento do corpo ao longo da borda    | 132       | expandido 540 / 380; compacto 380 / 340 |
+| `along`  | comprimento do corpo ao longo da borda    | 132       | expandido 580 / 380; compacto 380 / 340 |
 | `depth`  | quanto o corpo avança para dentro da tela | 12        | 216 / 260                               |
 | `flare`  | raio das abas côncavas                    | 8         | 24                                      |
 | `radius` | raio dos cantos externos do corpo         | 10        | 30                                      |

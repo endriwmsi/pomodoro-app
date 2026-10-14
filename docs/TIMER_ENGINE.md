@@ -210,3 +210,18 @@ escolhida, o que acontece ao concluir ou excluir a tarefa — estão em
 - Notificação e som ao concluir (Fase 5) — devem ser disparados a partir do efeito `Finished`
   com desfecho `Completed`, que ocorre uma única vez por sessão.
 - Atalhos de teclado para os controles.
+
+## Rotinas e expediente
+
+A engine recebe, antes de cada operação, um `Horizon` (`Engine::set_horizon`): a rotina em
+andamento, o tempo até a próxima âncora e se está dentro do expediente. Com ele:
+
+- `planned_for` encaixa a duração da próxima sessão (foco curto, pausa que absorve a sobra);
+- `follow_routine`, chamada ao fim de todo `sync`, pausa o foco quando uma rotina começa
+  (`pauseReason: routine`) e o retoma quando ela acaba;
+- `auto_starts` não inicia nada durante uma rotina nem fora do expediente;
+- `Effect::Started` leva `short` e o estado exposto ganha `routineId`, `routineRemainingMs` e
+  `short`.
+
+Sem rotinas nem expediente o horizonte é `Horizon::FREE` e a engine se comporta exatamente como
+antes. As regras completas, o ticker e as limitações estão em [ROUTINES.md](ROUTINES.md).

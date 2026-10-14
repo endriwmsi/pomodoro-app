@@ -6,12 +6,62 @@ escolha é uma configuração persistida (`appearance.template`, ver
 
 ## Templates existentes
 
-| ID       | Nome   | Características                                                                                                                                                               |
-| -------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `glass`  | Vidro  | Padrão. Painéis de vidro fumê (escuros e translúcidos, com desfoque, brilho suave no canto superior esquerdo e cantos bem arredondados), tipografia Segoe UI, destaque âmbar. |
-| `matrix` | Matriz | Painéis escuros opacos, tipografia monoespaçada em maiúsculas, rótulos numerados, leituras e gráficos em matriz de pontos, destaque laranja.                                  |
+| ID       | Nome   | Características                                                                                                                                                                                                                          |
+| -------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `glass`  | Vidro  | Padrão. Painéis de vidro fumê (escuros e translúcidos, com desfoque, brilho suave no canto superior esquerdo e cantos bem arredondados), tipografia Segoe UI, destaque âmbar.                                                            |
+| `matrix` | Matriz | Painéis escuros opacos, tipografia monoespaçada em maiúsculas, rótulos numerados, leituras e gráficos em matriz de pontos, destaque laranja.                                                                                             |
+| `signal` | Sinal  | Painel de telemetria: superfícies quase pretas e opacas, cantos pouco arredondados, rótulos monoespaçados em maiúsculas, números em peso normal, gráfico semanal em blocos empilhados e um único verde de destaque.                      |
+| `relief` | Relevo | Claro e macio (neumorfismo): painéis da cor do fundo, destacados só por uma sombra escura embaixo à direita e uma clara em cima à esquerda, cantos muito arredondados, texto escuro e destaque quase preto. **Não usa imagem de fundo.** |
 
-Ambos mantêm a moldura preta, a barra lateral e a imagem de fundo.
+Vidro, Matriz e Sinal mantêm a moldura preta e a imagem de fundo. O Relevo é o único template
+claro: a moldura e o fundo são cinza-claros e a imagem de fundo escolhida é ignorada (a escolha
+fica guardada e volta ao trocar de template).
+
+### Como cada template estiliza os elementos
+
+| Elemento                   | Vidro                         | Matriz                     | Sinal                               | Relevo                               |
+| -------------------------- | ----------------------------- | -------------------------- | ----------------------------------- | ------------------------------------ |
+| Painel (`.panel`)          | Vidro fumê com desfoque       | Escuro opaco, sombra       | Quase preto, borda fina, sem sombra | Cor do fundo, sombra dupla em relevo |
+| Rótulo (`PanelLabel`)      | Segoe UI, peso médio          | Mono, maiúsculas, numerado | Mono, maiúsculas, espaçado          | Pequeno, seminegrito, apagado        |
+| Indicador (`MetricValue`)  | Número grande                 | Matriz de pontos           | Número grande em peso normal        | Número grande em negrito             |
+| Gráfico (`WeekChart`)      | Barras arredondadas           | Colunas de pontos          | Colunas de blocos verdes            | Barras arredondadas                  |
+| Relógio do Pomodoro        | Número grande                 | Matriz de pontos           | Número grande                       | Número grande                        |
+| Destaque                   | Âmbar `#f5c251`               | Laranja `#ff5a36`          | Verde `#2ee66b`                     | Quase preto `#1d1f24`                |
+| Campos e áreas "afundadas" | `--color-panel-strong` escuro | Idem                       | Idem                                | Um tom abaixo do painel              |
+
+As classes `matrix:`, `signal:` e `relief:` (variantes do Tailwind declaradas em `globals.css`)
+aplicam um estilo só naquele template; o Vidro é o estilo base, sem variante.
+
+No Relevo, os utilitários `white` e `black` do Tailwind trocam de papel **na janela principal**
+(anéis de foco, véu dos diálogos), e os seletores nativos de data e hora usam o esquema claro.
+
+## Imagem de fundo
+
+Escolhida em **Configurações**, logo abaixo do template (`appearance.background`), entre:
+
+| Escolha            | O que mostra                                             |
+| ------------------ | -------------------------------------------------------- |
+| `default`          | A primeira imagem embutida, em ordem alfabética          |
+| `builtin` + `name` | Uma imagem embutida, pelo nome do arquivo sem a extensão |
+| `custom`           | A imagem enviada pelo usuário                            |
+| `none`             | Só o gradiente (`.app-background-fallback`)              |
+
+**Imagens embutidas:** os arquivos em `src/assets/backgrounds/` (`png`, `jpg`, `jpeg`, `webp`,
+`avif`). Para acrescentar uma, basta colocar o arquivo lá: ela aparece na grade na próxima
+compilação. O nome do arquivo é o identificador gravado e também o rótulo (`por-do-sol.jpg` →
+"Por do sol"); use só letras, números, hífen e sublinhado. Se uma imagem escolhida deixar de
+existir em uma versão nova, vale a padrão.
+
+**Imagem do usuário:** "Enviar uma imagem…" lê o arquivo escolhido e o entrega ao backend
+(`background_set_custom`), que o **copia** para o diretório de dados do aplicativo — continua
+valendo mesmo que o original seja movido ou apagado. Só existe uma por vez; enviar outra a
+substitui. O backend aceita PNG, JPEG e WebP de até 12 MB, reconhecidos pelos primeiros bytes do
+arquivo (a extensão e o tipo declarado são ignorados), e recusa o resto com `validation` no
+campo `image`. A janela a lê de volta como `data:` URL (`background_get_custom`), o que a CSP já
+permite para imagens; não há acesso do WebView ao sistema de arquivos.
+
+Código: `src/app/background.ts` (lista e resolução), `src/stores/background.ts`,
+`src/features/settings/BackgroundPicker.tsx` e `src-tauri/src/background.rs`.
 
 ## Como funciona
 
@@ -116,9 +166,10 @@ Nenhuma migration é necessária. Um banco gravado com um template que o execut�
 
 ## Limitações
 
-- O seletor ocupa duas colunas; com mais de dois templates o layout da grade precisa ser
-  revisto.
-- Tema claro/escuro não existe; os dois templates assumem texto claro.
+- O seletor ocupa duas colunas (duas linhas com os quatro templates atuais).
+- O Relevo é o único template claro e foi conferido só no dashboard; telas com muitos
+  controles (Kanban, diálogos, Configurações) podem ter pontos de contraste a ajustar.
+- No Sinal e no Relevo, relógios e indicadores usam o desenho base (número), não um próprio.
 - No notch, o template muda apenas o desenho do tempo e a cor de destaque. O fundo não depende
   do template: é preto, ou branco se o usuário escolher (`notch.theme`, ver
   [WINDOW_MANAGER.md](WINDOW_MANAGER.md#cor)). Ele acompanha a troca de template pelo evento `settings:changed`.

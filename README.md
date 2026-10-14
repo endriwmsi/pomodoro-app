@@ -23,8 +23,18 @@ se abre por cima de qualquer aplicativo; a roda do mouse troca de aba.
 | **Música**                                           | **Clima**                                              |
 | ![Aba Música do notch](docs/images/notch-musica.png) | ![Aba Clima do notch](docs/images/notch-clima.png)     |
 
-As capturas usam o template **Matriz**; há também o template **Vidro**, e o notch pode ser
+O notch pode ser
 preto, branco ou seguir o modo claro/escuro do Windows.
+
+## Temas
+
+Quatro templates de estilização, trocados em Configurações:
+
+| Vidro                                         | Matriz                                          |
+| --------------------------------------------- | ----------------------------------------------- |
+| ![Template Vidro](docs/images/dashboard.png)  | ![Template Matriz](docs/images/tema-matriz.png) |
+| **Sinal**                                     | **Relevo**                                      |
+| ![Template Sinal](docs/images/tema-sinal.png) | ![Template Relevo](docs/images/tema-relevo.png) |
 
 ## Telas
 
@@ -32,7 +42,11 @@ preto, branco ou seguir o modo claro/escuro do Windows.
 | ---------------------------------------- | --------------------------------------------- |
 | ![Quadro Kanban](docs/images/kanban.png) | ![Tela do Pomodoro](docs/images/pomodoro.png) |
 
-![Configurações](docs/images/configuracoes.png)
+| Rotina                                 | Configurações                                   |
+| -------------------------------------- | ----------------------------------------------- |
+| ![Tela Rotina](docs/images/rotina.png) | ![Configurações](docs/images/configuracoes.png) |
+
+As imagens usam dados de exemplo, gerados por `scripts/demo-data.mjs`.
 
 ## Instalar
 
@@ -58,6 +72,10 @@ Para desinstalar, use **Configurações do Windows → Aplicativos**. Seus dados
 - **Pomodoro:** inicie um foco pela tela Pomodoro, pelo notch ou pela bandeja. As durações
   ficam em Configurações.
 - **Kanban:** crie tarefas e use **Focar** para dedicar os próximos pomodoros a uma delas.
+- **Rotina:** cadastre atividades de horário fixo ("Hora do café") e, se quiser, o seu
+  expediente. O timer encaixa os ciclos para que os focos terminem na hora de cada rotina e do
+  fim do expediente.
+- **Fundo:** em Configurações escolha a imagem de fundo ou envie a sua.
 - **Notch:** em Configurações → Notch escolha a posição e a cor; a previsão do tempo é ligada
   em Configurações → Previsão do tempo.
 - **Iniciar com o Windows:** Configurações → Geral.
@@ -110,6 +128,8 @@ pendente — veja o [roadmap](docs/ROADMAP.md).
 | Notch retrátil e ícone na bandeja                      | Disponível (testes manuais pendentes) |
 | Notificações e sons                                    | Disponível (testes manuais pendentes) |
 | Kanban, com foco dedicado a uma tarefa                 | Disponível                            |
+| Rotinas e expediente, com encaixe dos ciclos           | Disponível (não verificado ao vivo)   |
+| Imagem de fundo configurável                           | Disponível (envio não verificado)     |
 | Dashboard com indicadores e gráfico semanal            | Disponível                            |
 | Notch: abas de música e de clima (clima opcional)      | Disponível (testes manuais pendentes) |
 | Iniciar com o Windows (opcional)                       | Disponível (não verificado no login)  |
@@ -126,8 +146,7 @@ Verificações (tipos, lint, formatação e testes de frontend e Rust):
 npm run check
 ```
 
-**Imagem de fundo:** coloque um arquivo `background.png` (ou `.jpg`, `.webp`, `.avif`) em
-`src/assets/`. Sem ele, a janela usa um gradiente.
+**Imagens de fundo embutidas:** coloque arquivos `png`, `jpg`, `webp` ou `avif` em `src/assets/backgrounds/`; elas aparecem em Configurações na próxima compilação.
 
 ## Documentação
 

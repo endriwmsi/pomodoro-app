@@ -16,6 +16,8 @@ Processo único (compasso.exe)
 │   ├── windows/ tray.rs         janela principal, notch e bandeja do sistema
 │   ├── notifications/           som e notificação ao concluir uma sessão
 │   ├── tasks/                   tarefas do Kanban
+│   ├── routines/                rotinas e expediente: horários fixos do dia e o "horizonte"
+│   ├── background.rs            imagem de fundo enviada pelo usuário
 │   ├── analytics/               estatísticas do dashboard
 │   ├── media/                   mídia em reprodução no sistema (aba de música)
 │   └── weather/                 previsão do tempo — a única parte que usa a rede
@@ -57,6 +59,11 @@ Mais os comandos do timer — `timer_get_state`, `timer_start`, `timer_pause`, `
 Consumidor: `stores/timer.ts`. Semântica, tipo e regras em
 [TIMER_ENGINE.md](TIMER_ENGINE.md#contrato-com-o-frontend).
 
+Comandos de rotinas (`commands/routines.rs`) — `routines_list`, `routine_create`,
+`routine_update`, `routine_delete`, `routine_skip` — em [ROUTINES.md](ROUTINES.md). Comandos da
+imagem de fundo (`commands/background.rs`) — `background_get_custom`, `background_set_custom` —
+em [THEMING.md](THEMING.md#imagem-de-fundo).
+
 Comandos de tarefas (`commands/tasks.rs`) — `tasks_list`, `task_create`, `task_update`,
 `task_delete`, `task_move`, que devolvem `Task[]`, e `timer_set_task` e `timer_focus_task`, que
 devolvem `TimerSnapshot`. Consumidores: `stores/tasks.ts` e `stores/timer.ts`. Contratos e
@@ -95,7 +102,15 @@ interface AppInfo {
 }
 
 interface Settings {
-  appearance: { template: 'glass' | 'matrix' };
+  appearance: {
+    template: 'glass' | 'matrix' | 'signal' | 'relief';
+    // Imagem de fundo: a padrão, nenhuma, uma embutida pelo nome ou a do usuário.
+    background:
+      | { kind: 'default' }
+      | { kind: 'none' }
+      | { kind: 'builtin'; name: string }
+      | { kind: 'custom' };
+  };
   timer: {
     focusMinutes: number; // 1–180
     shortBreakMinutes: number; // 1–60
@@ -113,6 +128,7 @@ interface Settings {
   goals: { dailyPomodoros: number | null }; // 1–50, ou null
   weather: { enabled: boolean; useLocation: boolean };
   general: { launchAtLogin: boolean }; // iniciar com o Windows
+  workday: { enabled: boolean; startMinute: number; endMinute: number }; // expediente
 }
 ```
 
@@ -142,6 +158,7 @@ nesse caso.
 
 | `settings:changed` | `Settings` | Depois de `update_settings` gravar | `lib/events.ts` → `stores/settings.ts` |
 | `tasks:changed` | — | Depois de qualquer alteração no quadro e ao concluir um foco | `lib/events.ts` → `stores/tasks.ts` |
+| `routines:changed` | — | Depois de criar, alterar ou excluir uma rotina | `lib/events.ts` → `stores/routines.ts` |
 | `app:navigate` | nome da tela (`string`) | Bandeja ou notch pedem uma tela; enviado só à janela `main` | `lib/events.ts` → `app/App.tsx` |
 
 `timer:state`, `settings:changed` e `tasks:changed` vão para todas as janelas: é assim que a janela principal e
@@ -168,6 +185,7 @@ src/
 │   │                        do mês (MonthCalendar)
 │   ├── pomodoro/            tela do timer (exibe o snapshot do backend)
 │   ├── kanban/              quadro, cartão, diálogo de tarefa e board.ts (lógica pura)
+│   ├── routines/            tela Rotina (expediente, faixa do dia, lista), diálogo e schedule.ts
 │   └── settings/            AppearanceSection, GeneralSection, TimerSection, GoalsSection,
 │                            NotchSection, AlertsSection, WeatherSection, AboutSection
 ├── notch/                   NotchApp (painel e abas), TimerTab, TasksTab, MediaTab, WeatherTab,
@@ -176,6 +194,8 @@ src/
 │   ├── settings.ts          store Zustand das configurações; useTemplate()
 │   ├── timer.ts             espelho do timer: último TimerSnapshot recebido
 │   ├── tasks.ts             espelho do quadro: última lista de tarefas recebida
+│   ├── routines.ts          espelho das rotinas
+│   ├── background.ts        conteúdo da imagem de fundo enviada pelo usuário
 │   └── media.ts             mídia em reprodução (compartilhada pelos players do notch)
 ├── lib/
 │   ├── commands.ts          wrappers tipados de `invoke` e tipos espelhados
@@ -238,6 +258,8 @@ src-tauri/
     ├── windows/             mod.rs (janela principal), notch.rs (geometria e estado)
     ├── notifications/       mod.rs (Alerts, textos), sound.rs (síntese e reprodução)
     ├── tasks/               mod.rs (modelo, validação), store.rs (SQL, ordem do quadro)
+    ├── routines/            mod.rs (modelo, validação, horizonte), store.rs (SQL)
+    ├── background.rs        guarda e lê a imagem de fundo do usuário
     ├── analytics/           mod.rs (totais por período, a partir de sessões e tarefas)
     ├── media/               mod.rs (sessão de mídia e volume do Windows)
     ├── weather/             mod.rs (provedor, cache de 15 min), location.rs (localização)

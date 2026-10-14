@@ -120,6 +120,32 @@ Configurada em `tauri.conf.json` → `bundle` e na pasta `src-tauri/installer/`:
 As páginas até a escolha da pasta foram **abertas e conferidas** (capturas em `docs/images/`);
 a instalação em si **não foi executada** durante o desenvolvimento.
 
+## Dados de exemplo e capturas de tela
+
+`scripts/demo-data.mjs` cria, **em uma pasta à parte**, um banco com seis semanas de pomodoros,
+tarefas nas três colunas, rotinas e expediente — para demonstrações e para as imagens do README
+e do instalador. Usa o SQLite embutido no Node (`node:sqlite`) e as migrations do projeto; não
+toca nos dados reais.
+
+```bash
+node scripts/demo-data.mjs "$env:TEMP\compasso-demo" --template glass
+```
+
+O aplicativo usa essa pasta quando a variável `COMPASSO_DATA_DIR` está definida (em vez de
+`%APPDATA%\com.endriwmsi.compasso`). No PowerShell:
+
+```bash
+$env:COMPASSO_DATA_DIR = "$env:TEMP\compasso-demo"; .\src-tauri\target\release\compasso.exe
+```
+
+Feche a instância em uso antes (só roda uma). Para voltar aos dados reais, abra o aplicativo
+de um terminal novo, ou limpe a variável (`$env:COMPASSO_DATA_DIR = $null`).
+
+As imagens de `docs/images/` foram tiradas assim, uma execução por template (`--template`
+aceita `glass`, `matrix`, `signal` e `relief`). O player de música mostra o que estiver tocando
+no computador no momento, e a aba de clima consulta a internet (capitais, não a localização).
+Depois de refazê-las, gere de novo as imagens do instalador (seção anterior).
+
 ## Configurações relevantes
 
 - **Porta 1420** fixa (`vite.config.ts` com `strictPort` e `build.devUrl` em

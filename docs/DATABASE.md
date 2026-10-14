@@ -61,6 +61,7 @@ Regras para evoluir o esquema:
 | 2      | `0002_pomodoro_sessions.sql` | Tabelas `pomodoro_sessions` e `timer_state`                                                      |
 | 3      | `0003_tasks.sql`             | Tabela `tasks`; colunas `pomodoro_sessions.task_id` e `timer_state.active_task_id`               |
 | 4      | `0004_analytics_index.sql`   | Índices `idx_pomodoro_sessions_ended_at` e `idx_tasks_completed_at` (consultas das estatísticas) |
+| 5      | `0005_routines.sql`          | Tabela `routines`; coluna `pomodoro_sessions.short` (foco encurtado, não soma pomodoro)          |
 
 A tabela de tarefas (Fase 6) será criada pela migration da respectiva fase, junto com o código
 que a utiliza — ver a nota no
@@ -171,22 +172,25 @@ recebe o padrão ao carregar (`#[serde(default)]`).
 
 Fonte de verdade: `src-tauri/src/settings/mod.rs`.
 
-| Campo                         | Padrão           | Limites (inclusive)                        |
-| ----------------------------- | ---------------- | ------------------------------------------ |
-| `appearance.template`         | `glass`          | `glass`, `matrix`                          |
-| `timer.focusMinutes`          | 25               | 1 – 180                                    |
-| `timer.shortBreakMinutes`     | 5                | 1 – 60                                     |
-| `timer.longBreakMinutes`      | 15               | 1 – 120                                    |
-| `timer.cyclesBeforeLongBreak` | 4                | 1 – 12                                     |
-| `timer.autoStartBreaks`       | `false`          | —                                          |
-| `timer.autoStartFocus`        | `false`          | —                                          |
-| `notch.enabled`               | `true`           | —                                          |
-| `notch.position`              | `top`            | `top`, `left`, `right`                     |
-| `alerts.soundEnabled`         | `true`           | —                                          |
-| `alerts.notificationsEnabled` | `true`           | —                                          |
-| `goals.dailyPomodoros`        | ausente (`null`) | 1 – 50, ou `null` para nenhuma meta        |
-| `weather.enabled`             | `false`          | — (liga a única função que usa a internet) |
-| `weather.useLocation`         | `false`          | —                                          |
+| Campo                               | Padrão                | Limites (inclusive)                                                                      |
+| ----------------------------------- | --------------------- | ---------------------------------------------------------------------------------------- |
+| `appearance.template`               | `glass`               | `glass`, `matrix`, `signal`, `relief`                                                    |
+| `appearance.background`             | `{ kind: "default" }` | `default`, `none`, `custom` ou `builtin` com `name` (letras, números, `-` e `_`, até 64) |
+| `workday.enabled`                   | `false`               | —                                                                                        |
+| `workday.startMinute` / `endMinute` | 540 / 1080            | `startMinute < endMinute ≤ 1440`                                                         |
+| `timer.focusMinutes`                | 25                    | 1 – 180                                                                                  |
+| `timer.shortBreakMinutes`           | 5                     | 1 – 60                                                                                   |
+| `timer.longBreakMinutes`            | 15                    | 1 – 120                                                                                  |
+| `timer.cyclesBeforeLongBreak`       | 4                     | 1 – 12                                                                                   |
+| `timer.autoStartBreaks`             | `false`               | —                                                                                        |
+| `timer.autoStartFocus`              | `false`               | —                                                                                        |
+| `notch.enabled`                     | `true`                | —                                                                                        |
+| `notch.position`                    | `top`                 | `top`, `left`, `right`                                                                   |
+| `alerts.soundEnabled`               | `true`                | —                                                                                        |
+| `alerts.notificationsEnabled`       | `true`                | —                                                                                        |
+| `goals.dailyPomodoros`              | ausente (`null`)      | 1 – 50, ou `null` para nenhuma meta                                                      |
+| `weather.enabled`                   | `false`               | — (liga a única função que usa a internet)                                               |
+| `weather.useLocation`               | `false`               | —                                                                                        |
 
 O frontend espelha padrões e limites em `src/stores/settings.ts` apenas para o primeiro quadro
 e para mensagens imediatas; ao mudar um valor aqui, atualize lá também.
@@ -214,3 +218,26 @@ recusa de arquivo que não é SQLite, aplicação e idempotência das migrations
 das pendentes, rollback de migration com falha, recusa de esquema mais novo, restrição
 `json_valid`, ida e volta das configurações, persistência após fechar e reabrir o arquivo,
 rejeição de valores inválidos sem escrita e os quatro casos de leitura tolerante.
+
+### `routines` (migration 0005)
+
+Rotinas do usuário; regras em [ROUTINES.md](ROUTINES.md).
+
+| Coluna             | Tipo    | Restrições                               | Descrição                                   |
+| ------------------ | ------- | ---------------------------------------- | ------------------------------------------- |
+| `id`               | INTEGER | PRIMARY KEY AUTOINCREMENT                |                                             |
+| `name`             | TEXT    | 1 a 60 caracteres                        | Nome exibido                                |
+| `start_minute`     | INTEGER | 0 a 1439                                 | Início, em minutos desde a meia-noite local |
+| `duration_minutes` | INTEGER | 1 a 240; `start_minute + duração ≤ 1440` | Duração                                     |
+| `weekdays`         | INTEGER | 1 a 127                                  | Um bit por dia: 1 = segunda … 64 = domingo  |
+| `enabled`          | INTEGER | 0 ou 1, padrão 1                         | Desligada, não vale                         |
+| `created_at_ms`    | INTEGER |                                          | Criação (UTC)                               |
+
+A mesma migration acrescentou `pomodoro_sessions.short` (0 ou 1, padrão 0): foco encurtado para
+caber antes de uma rotina ou do fim do expediente. Conta tempo de foco, mas não soma um pomodoro.
+
+### Fora do banco: a imagem de fundo do usuário
+
+A imagem enviada em Configurações → Imagem de fundo é um arquivo, `background-image`, no mesmo
+diretório do banco (`%APPDATA%\com.endriwmsi.compasso\`). No banco fica só a escolha
+(`appearance.background`). Ver [THEMING.md](THEMING.md#imagem-de-fundo).

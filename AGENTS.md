@@ -33,6 +33,7 @@ Cada assunto tem uma única fonte de verdade. Não duplique conteúdo; referenci
 | Timer: estados, tempo, sessões, recuperação        | [docs/TIMER_ENGINE.md](docs/TIMER_ENGINE.md)       |
 | Estatísticas: definições das métricas e calendário | [docs/ANALYTICS.md](docs/ANALYTICS.md)             |
 | Kanban: tarefas, ordem, vínculo com o timer        | [docs/KANBAN.md](docs/KANBAN.md)                   |
+| Rotinas e expediente: âncoras e encaixe do timer   | [docs/ROUTINES.md](docs/ROUTINES.md)               |
 | Aba de clima: provedor, dados enviados, frequência | [docs/WEATHER.md](docs/WEATHER.md)                 |
 | Aba de música: sessão de mídia e volume            | [docs/MEDIA.md](docs/MEDIA.md)                     |
 | Som e notificações                                 | [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md)     |
