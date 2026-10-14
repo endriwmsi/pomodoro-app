@@ -4,6 +4,10 @@
 //!
 //! Todas as funções bloqueiam por alguns milissegundos em chamadas ao
 //! sistema: devem ser chamadas fora da thread principal.
+//!
+//! Fora do Windows não há implementação: as funções públicas devolvem "nada
+//! tocando", e parte do que está aqui fica sem uso (mas segue testada).
+#![cfg_attr(not(windows), allow(dead_code))]
 
 use serde::{Deserialize, Serialize};
 

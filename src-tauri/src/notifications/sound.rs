@@ -1,5 +1,8 @@
 //! Sons de conclusão de sessão. São sintetizados em memória — não há arquivo
 //! de áudio nem download — e tocados pela API de som do Windows.
+//!
+//! Fora do Windows nada toca: a síntese fica sem uso (mas segue testada).
+#![cfg_attr(not(windows), allow(dead_code))]
 
 use std::sync::OnceLock;
 

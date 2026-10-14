@@ -1,0 +1,9 @@
+# Fim de linha LF em todo sistema: o Prettier confere isso, e o checkout do
+# Windows (autocrlf) converteria para CRLF sem esta regra.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.icns binary
+*.bmp binary
