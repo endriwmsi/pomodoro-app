@@ -29,15 +29,15 @@ export function TasksTab({ stacked }: { stacked: boolean }) {
   return (
     <div className={`flex h-full gap-4 ${stacked ? 'flex-col' : ''}`}>
       {stacked ? null : (
-        <div className="flex w-28 shrink-0 flex-col justify-center" aria-hidden="true">
+        <div className="flex shrink-0 flex-col justify-center" aria-hidden="true">
           {template === 'matrix' ? (
-            <DotMatrixText text={clock} size={28} />
+            <DotMatrixText text={clock} size={32} />
           ) : (
-            <span className="font-display text-3xl leading-none font-semibold tabular-nums">
+            <span className="font-display text-4xl leading-none font-semibold tabular-nums">
               {clock}
             </span>
           )}
-          <span className="mt-1.5 text-[0.6875rem] text-white/55 matrix:tracking-widest matrix:uppercase">
+          <span className="mt-2 text-[0.6875rem] text-white/55 matrix:tracking-widest matrix:uppercase">
             {snapshot ? PHASE_LABEL[snapshot.phase] : 'Compasso'}
           </span>
         </div>
@@ -57,43 +57,46 @@ export function TasksTab({ stacked }: { stacked: boolean }) {
           </button>
         </div>
       ) : (
-        <ul
-          aria-label="Tarefas abertas"
-          data-notch-scroll
-          className="-mr-2 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto pr-2"
-        >
-          {open.map((task) => {
-            const chosen = task.id === snapshot?.taskId;
-            return (
-              <li key={task.id} className="flex items-center gap-2">
-                <Checkbox
-                  checked={false}
-                  aria-label={`Concluir ${task.title}`}
-                  onCheckedChange={() => void moveTask(task.id, 'done', END_OF_COLUMN)}
-                  className="size-4 border-white/40 bg-transparent"
-                />
-                <span
-                  title={task.title}
-                  className={`min-w-0 flex-1 truncate text-xs ${chosen ? 'text-accent' : 'text-white/90'}`}
-                >
-                  {task.title}
-                </span>
-                <button
-                  type="button"
-                  aria-label={`Focar em ${task.title}`}
-                  onClick={() => void focusTask(task.id)}
-                  className={`shrink-0 rounded-full px-2.5 py-0.5 text-[0.6875rem] font-medium transition-opacity duration-150 outline-none hover:opacity-85 matrix:tracking-wider matrix:uppercase ${
-                    chosen && focusing
-                      ? 'border border-accent text-accent'
-                      : 'bg-accent text-accent-ink'
-                  }`}
-                >
-                  {chosen && focusing ? 'Em foco' : 'Focar'}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+        // Poucas tarefas ficam centralizadas na altura; muitas, rolam.
+        <div className="flex min-h-0 min-w-0 flex-1 items-center">
+          <ul
+            aria-label="Tarefas abertas"
+            data-notch-scroll
+            className="-mr-2 flex max-h-full w-full flex-col gap-2 overflow-y-auto pr-2"
+          >
+            {open.map((task) => {
+              const chosen = task.id === snapshot?.taskId;
+              return (
+                <li key={task.id} className="flex items-center gap-2.5">
+                  <Checkbox
+                    checked={false}
+                    aria-label={`Concluir ${task.title}`}
+                    onCheckedChange={() => void moveTask(task.id, 'done', END_OF_COLUMN)}
+                    className="size-4 border-white/40 bg-transparent"
+                  />
+                  <span
+                    title={task.title}
+                    className={`min-w-0 flex-1 truncate text-[0.8125rem] ${chosen ? 'text-accent' : 'text-white/90'}`}
+                  >
+                    {task.title}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label={`Focar em ${task.title}`}
+                    onClick={() => void focusTask(task.id)}
+                    className={`shrink-0 rounded-full px-3 py-1 text-[0.6875rem] font-medium transition-opacity duration-150 outline-none hover:opacity-85 matrix:tracking-wider matrix:uppercase ${
+                      chosen && focusing
+                        ? 'border border-accent text-accent'
+                        : 'bg-accent text-accent-ink'
+                    }`}
+                  >
+                    {chosen && focusing ? 'Em foco' : 'Focar'}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       )}
     </div>
   );

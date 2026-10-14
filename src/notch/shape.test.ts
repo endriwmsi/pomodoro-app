@@ -13,8 +13,8 @@ describe('forma do notch', () => {
     });
   });
 
-  it('expandido (aba + player compacto), ocupa 588 × 216 no topo e 260 × 428 nas laterais', () => {
-    expect(windowSize('top', notchShape('top', 'expanded'))).toEqual({ width: 588, height: 216 });
+  it('expandido (aba + player compacto), ocupa 628 × 216 no topo e 260 × 428 nas laterais', () => {
+    expect(windowSize('top', notchShape('top', 'expanded'))).toEqual({ width: 628, height: 216 });
     expect(windowSize('left', notchShape('left', 'expanded'))).toEqual({ width: 260, height: 428 });
     expect(windowSize('right', notchShape('right', 'expanded'))).toEqual({
       width: 260,

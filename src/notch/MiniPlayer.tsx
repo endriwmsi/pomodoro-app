@@ -6,9 +6,10 @@ import { NOTCH_ICON_BUTTON } from '@/notch/shared';
 import { useMediaStore } from '@/stores/media';
 
 /**
- * Player compacto, visível ao lado das demais abas: capa pequena, título e os
- * três controles básicos e o progresso da faixa. A aba Música tem o player
- * completo.
+ * Player compacto, visível ao lado das demais abas: capa, título, os três
+ * controles básicos e o progresso da faixa. No topo fica em pé, com a capa
+ * maior e os tempos da faixa; nas laterais (`horizontal`), em uma linha. A aba
+ * Música tem o player completo.
  */
 export function MiniPlayer({ horizontal }: { horizontal: boolean }) {
   const state = useMediaStore((store) => store.state);
@@ -24,9 +25,13 @@ export function MiniPlayer({ horizontal }: { horizontal: boolean }) {
       className="flex h-full w-full min-w-0 flex-col justify-center gap-1.5"
     >
       <div
-        className={`flex min-w-0 items-center gap-1.5 ${horizontal ? 'flex-row' : 'flex-col text-center'}`}
+        className={`flex min-w-0 items-center ${horizontal ? 'flex-row gap-1.5' : 'flex-col gap-2 text-center'}`}
       >
-        <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/10">
+        <div
+          className={`flex shrink-0 items-center justify-center overflow-hidden bg-white/10 ${
+            horizontal ? 'size-10 rounded-xl' : 'size-12 rounded-2xl'
+          }`}
+        >
           {cover ? (
             <img src={cover} alt="" className="size-full object-cover" />
           ) : (
@@ -35,7 +40,10 @@ export function MiniPlayer({ horizontal }: { horizontal: boolean }) {
         </div>
 
         <div className={`min-w-0 ${horizontal ? 'flex-1' : 'w-full'}`}>
-          <p className="truncate text-[0.6875rem] font-medium text-white/90" title={state?.title}>
+          <p
+            className={`truncate font-medium text-white/90 ${horizontal ? 'text-[0.6875rem]' : 'text-xs'}`}
+            title={state?.title}
+          >
             {available ? state.title || 'Sem título' : 'Nada tocando'}
           </p>
           {available ? (
@@ -85,7 +93,7 @@ export function MiniPlayer({ horizontal }: { horizontal: boolean }) {
           </button>
         </div>
       </div>
-      <SeekBar compact />
+      <SeekBar compact={horizontal} />
     </section>
   );
 }

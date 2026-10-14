@@ -5,6 +5,7 @@ import type {
   MediaAction,
   MediaState,
   NotchLayout,
+  Routine,
   Settings,
   Task,
   TaskStatus,
@@ -14,6 +15,7 @@ import type {
 import { NotchApp } from '@/notch/NotchApp';
 import { DEFAULT_TIMER_SETTINGS, useSettingsStore } from '@/stores/settings';
 import { useMediaStore } from '@/stores/media';
+import { useRoutinesStore } from '@/stores/routines';
 import { useTasksStore } from '@/stores/tasks';
 import { useTimerStore } from '@/stores/timer';
 
@@ -33,6 +35,8 @@ const backend = vi.hoisted(() => ({
   mediaGetArtwork: vi.fn<() => Promise<string | null>>(),
   mediaSetVolume: vi.fn<(level: number) => Promise<MediaState>>(),
   mediaSeek: vi.fn<(positionMs: number) => Promise<MediaState>>(),
+  routinesList: vi.fn<() => Promise<Routine[]>>(),
+  routineSkip: vi.fn<() => Promise<TimerSnapshot>>(),
   weatherGet: vi.fn<() => Promise<WeatherReport>>(),
   emitTimer: undefined as ((snapshot: TimerSnapshot) => void) | undefined,
 }));
@@ -56,6 +60,8 @@ vi.mock('@/lib/commands', () => ({
   mediaGetArtwork: backend.mediaGetArtwork,
   mediaSetVolume: backend.mediaSetVolume,
   mediaSeek: backend.mediaSeek,
+  routinesList: backend.routinesList,
+  routineSkip: backend.routineSkip,
   weatherGet: backend.weatherGet,
 }));
 vi.mock('@/lib/events', () => ({
@@ -65,6 +71,7 @@ vi.mock('@/lib/events', () => ({
   },
   subscribeSettingsChanged: () => Promise.resolve(() => undefined),
   subscribeTasksChanged: () => Promise.resolve(() => undefined),
+  subscribeRoutinesChanged: () => Promise.resolve(() => undefined),
 }));
 
 const RUNNING: TimerSnapshot = {
@@ -76,6 +83,9 @@ const RUNNING: TimerSnapshot = {
   cyclesBeforeLongBreak: 4,
   pauseReason: null,
   taskId: null,
+  routineId: null,
+  routineRemainingMs: null,
+  short: false,
 };
 
 function task(id: number, title: string, status: TaskStatus, position: number): Task {
@@ -140,13 +150,14 @@ const PLAYING: MediaState = {
 };
 
 const SETTINGS: Settings = {
-  appearance: { template: 'glass' },
+  appearance: { template: 'glass', background: { kind: 'default' } },
   timer: DEFAULT_TIMER_SETTINGS,
   notch: { enabled: true, position: 'top', theme: 'dark' },
   alerts: { soundEnabled: true, notificationsEnabled: true },
   goals: { dailyPomodoros: null },
   weather: { enabled: false, useLocation: false },
   general: { launchAtLogin: false },
+  workday: { enabled: false, startMinute: 540, endMinute: 1080 },
 };
 
 const SIDE_SETTINGS: Settings = {
@@ -202,6 +213,7 @@ describe('NotchApp', () => {
     backend.timerGetState.mockResolvedValue(RUNNING);
     backend.tasksList.mockResolvedValue(TASKS);
     backend.mediaGetState.mockResolvedValue(SILENT);
+    backend.routinesList.mockResolvedValue([]);
     backend.mediaGetArtwork.mockResolvedValue(null);
     backend.timerPause.mockResolvedValue({ ...RUNNING, status: 'paused', pauseReason: 'user' });
     backend.getSettings.mockResolvedValue(SETTINGS);
@@ -213,6 +225,7 @@ describe('NotchApp', () => {
     useSettingsStore.setState(useSettingsStore.getInitialState(), true);
     useTasksStore.setState(useTasksStore.getInitialState(), true);
     useMediaStore.setState(useMediaStore.getInitialState(), true);
+    useRoutinesStore.setState(useRoutinesStore.getInitialState(), true);
   });
 
   it('mostra o tempo e a fase vindos do backend', async () => {
@@ -308,7 +321,7 @@ describe('NotchApp', () => {
     fireEvent.mouseEnter(hoverArea);
     await settle();
 
-    expect(body).toHaveStyle({ width: '540px', height: '216px' });
+    expect(body).toHaveStyle({ width: '580px', height: '216px' });
   });
 
   it('na lateral, a forma fica em pé e abre para dentro da tela', async () => {
@@ -667,7 +680,7 @@ describe('NotchApp', () => {
     fireEvent.mouseEnter(hoverArea);
     await settle();
     const body = screen.getByRole('region', { name: 'Compasso' });
-    expect(body).toHaveStyle({ width: '540px' });
+    expect(body).toHaveStyle({ width: '580px' });
 
     fireEvent.click(screen.getByRole('tab', { name: 'Música' }));
     await act(async () => {
@@ -682,7 +695,7 @@ describe('NotchApp', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Tarefas' }));
     await settle();
     expect(backend.notchSetLayout).toHaveBeenLastCalledWith('expanded');
-    expect(body).toHaveStyle({ width: '540px' });
+    expect(body).toHaveStyle({ width: '580px' });
   });
 
   it('só consulta a mídia periodicamente com o painel aberto', async () => {
@@ -742,6 +755,46 @@ describe('NotchApp', () => {
     });
     expect(document.documentElement.dataset.notchTheme).toBe('dark');
     vi.unstubAllGlobals();
+  });
+
+  it('durante uma rotina, mostra o nome e a contagem dela e deixa pulá-la', async () => {
+    backend.routinesList.mockResolvedValue([
+      {
+        id: 4,
+        name: 'Hora do café',
+        startMinute: 615,
+        durationMinutes: 15,
+        weekdays: 127,
+        enabled: true,
+      },
+    ]);
+    backend.timerGetState.mockResolvedValue({
+      ...RUNNING,
+      status: 'paused',
+      pauseReason: 'routine',
+      routineId: 4,
+      routineRemainingMs: 12 * 60_000 + 30_000,
+    });
+    backend.routineSkip.mockResolvedValue(RUNNING);
+    await renderNotch();
+
+    const panel = timerPanel();
+    expect(panel).toHaveTextContent('Rotina');
+    expect(panel).toHaveTextContent('Hora do café');
+    // O relógio é o da rotina, não o do foco em espera.
+    expect(screen.getByRole('timer')).toHaveTextContent('12:30');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Pular a rotina' }));
+    await settle();
+    expect(backend.routineSkip).toHaveBeenCalledTimes(1);
+    expect(backend.timerSkip).not.toHaveBeenCalled();
+  });
+
+  it('avisa quando o foco foi encurtado', async () => {
+    backend.timerGetState.mockResolvedValue({ ...RUNNING, short: true });
+    await renderNotch();
+
+    expect(timerPanel()).toHaveTextContent('Foco curto');
   });
 
   it('acompanha os eventos do timer', async () => {

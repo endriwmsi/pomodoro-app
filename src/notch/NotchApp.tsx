@@ -29,12 +29,19 @@ import {
 } from '@/lib/commands';
 import { MediaTab } from '@/notch/MediaTab';
 import { MiniPlayer } from '@/notch/MiniPlayer';
-import { EDGE_LAYOUT, LAYOUT_RANK, MINI_PLAYER_SIZE, notchShape } from '@/notch/shape';
+import {
+  EDGE_LAYOUT,
+  LAYOUT_RANK,
+  MINI_PLAYER_HEIGHT,
+  MINI_PLAYER_WIDTH,
+  notchShape,
+} from '@/notch/shape';
 import { reportNotchFailure } from '@/notch/shared';
 import { TasksTab } from '@/notch/TasksTab';
 import { TimerTab } from '@/notch/TimerTab';
 import { WeatherTab } from '@/notch/WeatherTab';
 import { useMediaStore } from '@/stores/media';
+import { useRoutinesStore } from '@/stores/routines';
 import { useSettingsStore, useTemplate } from '@/stores/settings';
 import { useTasksStore } from '@/stores/tasks';
 import { useTimerStore } from '@/stores/timer';
@@ -421,7 +428,7 @@ function NotchPanel({ position }: { position: NotchPosition }) {
               {showMiniPlayer ? (
                 <div
                   style={
-                    side ? { height: MINI_PLAYER_SIZE - 12 } : { width: MINI_PLAYER_SIZE - 12 }
+                    side ? { height: MINI_PLAYER_HEIGHT - 12 } : { width: MINI_PLAYER_WIDTH - 12 }
                   }
                   className={`shrink-0 border-white/10 ${side ? 'border-t pt-3' : 'border-l pl-3'}`}
                 >
@@ -465,10 +472,12 @@ export function NotchApp() {
   const connectSettings = useSettingsStore((state) => state.connect);
   const connectTimer = useTimerStore((state) => state.connect);
   const connectTasks = useTasksStore((state) => state.connect);
+  const connectRoutines = useRoutinesStore((state) => state.connect);
 
   useEffect(() => connectSettings(), [connectSettings]);
   useEffect(() => connectTimer(), [connectTimer]);
   useEffect(() => connectTasks(), [connectTasks]);
+  useEffect(() => connectRoutines(), [connectRoutines]);
   useEffect(() => {
     applyTemplate(template);
   }, [template]);

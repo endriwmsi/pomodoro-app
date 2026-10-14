@@ -39,7 +39,7 @@ fn edge_size(position: NotchPosition, layout: Layout) -> EdgeSize {
     let side = position != NotchPosition::Top;
     let (along, depth) = match (layout, side) {
         (Layout::Collapsed, _) => (148.0, 12.0),
-        (Layout::Expanded, false) => (588.0, 216.0),
+        (Layout::Expanded, false) => (628.0, 216.0),
         (Layout::Compact, false) => (428.0, 216.0),
         (Layout::Expanded, true) => (428.0, 260.0),
         (Layout::Compact, true) => (388.0, 260.0),
@@ -274,7 +274,7 @@ mod tests {
             (g.width, g.height)
         };
 
-        assert_eq!(size(Top, Expanded), (588, 216));
+        assert_eq!(size(Top, Expanded), (628, 216));
         assert_eq!(size(Top, Compact), (428, 216));
         assert_eq!(size(Left, Expanded), (260, 428));
         assert_eq!(size(Left, Compact), (260, 388));
@@ -294,7 +294,7 @@ mod tests {
     fn sizes_follow_the_dpi_scale() {
         let g = geometry(monitor(0, 0, 2880, 1620, 1.5), Top, Expanded);
 
-        assert_eq!((g.width, g.height), (882, 324));
+        assert_eq!((g.width, g.height), (942, 324));
         assert_eq!(center_x(g), 1440);
     }
 

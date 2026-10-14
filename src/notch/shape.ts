@@ -16,8 +16,12 @@ export interface NotchShape {
   radius: number;
 }
 
-/** Espaço reservado ao player compacto, ao lado (topo) ou abaixo (laterais) da aba. */
-export const MINI_PLAYER_SIZE = 120;
+/**
+ * Espaço reservado ao player compacto: a largura dele ao lado da aba (topo) e
+ * a altura dele abaixo da aba (laterais).
+ */
+export const MINI_PLAYER_WIDTH = 160;
+export const MINI_PLAYER_HEIGHT = 120;
 
 const COLLAPSED: NotchShape = { along: 132, depth: 12, flare: 8, radius: 10 };
 const OPEN = { flare: 24, radius: 30 };
@@ -26,13 +30,13 @@ const SHAPES: Record<'top' | 'side', Record<NotchLayout, NotchShape>> = {
   top: {
     collapsed: COLLAPSED,
     // Uma aba (420) mais o player compacto.
-    expanded: { along: 420 + MINI_PLAYER_SIZE, depth: 216, ...OPEN },
+    expanded: { along: 420 + MINI_PLAYER_WIDTH, depth: 216, ...OPEN },
     // Só o player de música.
     compact: { along: 380, depth: 216, ...OPEN },
   },
   side: {
     collapsed: COLLAPSED,
-    expanded: { along: 260 + MINI_PLAYER_SIZE, depth: 260, ...OPEN },
+    expanded: { along: 260 + MINI_PLAYER_HEIGHT, depth: 260, ...OPEN },
     // O player completo, empilhado: capa, faixa, controles, progresso e volume.
     compact: { along: 340, depth: 260, ...OPEN },
   },
