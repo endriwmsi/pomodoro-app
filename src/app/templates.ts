@@ -21,6 +21,16 @@ export const TEMPLATES: readonly TemplateOption[] = [
     label: 'Matriz',
     description: 'Painéis escuros, texto monoespaçado e leituras em matriz de pontos.',
   },
+  {
+    id: 'signal',
+    label: 'Sinal',
+    description: 'Painel de telemetria: quase preto, rótulos em maiúsculas e blocos verdes.',
+  },
+  {
+    id: 'relief',
+    label: 'Relevo',
+    description: 'Claro e macio, com superfícies em relevo. Não usa imagem de fundo.',
+  },
 ];
 
 export const DEFAULT_TEMPLATE: TemplateId = 'glass';

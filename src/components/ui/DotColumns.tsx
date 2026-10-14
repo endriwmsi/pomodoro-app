@@ -11,10 +11,20 @@ interface DotColumnsProps {
   rows?: number;
   /** Índice da coluna destacada com a cor de destaque. */
   highlight?: number;
+  /** `dot`: pontos (template Matriz); `block`: blocos empilhados (template Sinal). */
+  shape?: 'dot' | 'block';
 }
 
-/** Gráfico de colunas em pontos, usado pelo template Matriz. */
-export function DotColumns({ values, labels, label, rows = 6, highlight }: DotColumnsProps) {
+/** Gráfico de colunas em pontos (template Matriz) ou em blocos (template Sinal). */
+export function DotColumns({
+  values,
+  labels,
+  label,
+  rows = 6,
+  highlight,
+  shape = 'dot',
+}: DotColumnsProps) {
+  const block = shape === 'block';
   // A escala nunca fica abaixo de `rows`: valores pequenos acendem um ponto por unidade.
   const max = Math.max(rows, ...values);
 
@@ -31,9 +41,13 @@ export function DotColumns({ values, labels, label, rows = 6, highlight }: DotCo
                 <span
                   key={row}
                   data-lit={on}
-                  className={`size-1.5 rounded-full ${
-                    on ? (active ? 'bg-accent' : 'bg-ink') : 'bg-ink/15'
-                  }`}
+                  className={
+                    block
+                      ? `h-3 w-full max-w-10 rounded-[3px] ${
+                          on ? (active ? 'bg-accent' : 'bg-accent/45') : 'bg-ink/8'
+                        }`
+                      : `size-1.5 rounded-full ${on ? (active ? 'bg-accent' : 'bg-ink') : 'bg-ink/15'}`
+                  }
                 />
               );
             })}

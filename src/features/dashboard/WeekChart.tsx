@@ -28,18 +28,19 @@ function describe(values: readonly number[]): string {
   return `Pomodoros concluídos por dia: ${days.join(', ')}`;
 }
 
-/** Gráfico semanal: barras no template Vidro, colunas de pontos no Matriz. */
+/** Gráfico semanal: barras (Vidro e Relevo), colunas de pontos (Matriz) ou de blocos (Sinal). */
 export function WeekChart({ values, today }: WeekChartProps) {
   const template = useTemplate();
   const label = describe(values);
 
-  if (template === 'matrix') {
+  if (template === 'matrix' || template === 'signal') {
     return (
       <DotColumns
         values={values}
         labels={WEEKDAY_INITIALS}
         label={label}
         rows={8}
+        shape={template === 'signal' ? 'block' : 'dot'}
         {...(today === undefined ? {} : { highlight: today })}
       />
     );

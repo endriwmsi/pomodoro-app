@@ -1,7 +1,9 @@
 @import 'tailwindcss';
 
-/* `matrix:` aplica uma classe apenas no template "Matriz" (ver docs/THEMING.md). */
+/* `matrix:`, `signal:` e `relief:` aplicam uma classe apenas naquele template (ver docs/THEMING.md). */
 @custom-variant matrix (&:where([data-template='matrix'], [data-template='matrix'] *));
+@custom-variant signal (&:where([data-template='signal'], [data-template='signal'] *));
+@custom-variant relief (&:where([data-template='relief'], [data-template='relief'] *));
 
 /*
  * Tokens do template padrão ("glass"). Cada template adicional sobrescreve
@@ -75,6 +77,80 @@
   --panel-shadow: 0 12px 28px rgb(0 0 0 / 0.28);
   --scrollbar-thumb: rgb(244 243 238 / 0.22);
   --scrollbar-thumb-hover: var(--color-accent);
+}
+
+/*
+ * Sinal: painel de telemetria. Superfícies quase pretas e opacas, cantos
+ * pouco arredondados, rótulos monoespaçados e um único verde de destaque.
+ */
+:root[data-template='signal'] {
+  --color-shell: #050506;
+  --color-panel: #0c0d0e;
+  --color-panel-strong: #141517;
+  --color-panel-border: rgb(255 255 255 / 0.09);
+  --color-popover: #141517;
+  --color-ink: #f1f4f2;
+  --color-ink-muted: rgb(241 244 242 / 0.5);
+  --color-accent: #2ee66b;
+  --color-accent-ink: #04170b;
+  --color-priority-medium: #facc15;
+
+  --radius-panel: 14px;
+  --radius-card: 12px;
+  --panel-backdrop: none;
+  --panel-highlight: none;
+  --panel-shadow: none;
+  --scrollbar-thumb: rgb(241 244 242 / 0.2);
+  --scrollbar-thumb-hover: var(--color-accent);
+}
+
+/*
+ * Relevo: claro e macio (neumorfismo). Painéis da mesma cor do fundo,
+ * destacados só por uma sombra escura embaixo à direita e uma clara em cima
+ * à esquerda. É o único template claro e o único sem imagem de fundo.
+ */
+:root[data-template='relief'] {
+  color-scheme: light;
+  --color-shell: #dfe2e7;
+  --color-panel: #e8eaee;
+  /* Campos e áreas "afundadas": um tom abaixo do painel. */
+  --color-panel-strong: #dcdfe5;
+  --color-panel-border: rgb(255 255 255 / 0.7);
+  --color-popover: #eef0f3;
+  --color-ink: #1d1f24;
+  --color-ink-muted: rgb(29 31 36 / 0.56);
+  --color-accent: #1d1f24;
+  --color-accent-ink: #f3f4f6;
+  --color-priority-low: #2563eb;
+  --color-priority-medium: #c2710c;
+  --color-priority-high: #dc2626;
+
+  --radius-panel: 30px;
+  --radius-card: 28px;
+  --panel-backdrop: none;
+  --panel-highlight: none;
+  --panel-shadow: 10px 10px 22px rgb(163 171 186 / 0.6), -10px -10px 22px rgb(255 255 255 / 0.95);
+  --scrollbar-thumb: rgb(29 31 36 / 0.25);
+  --scrollbar-thumb-hover: rgb(29 31 36 / 0.5);
+}
+
+/*
+ * Na janela principal, os utilitários `white` e `black` do Tailwind trocam de
+ * papel no Relevo (anéis de foco, véu dos diálogos…). O notch fica de fora:
+ * a cor dele não depende do template.
+ */
+:root[data-template='relief']:not([data-window='notch']) {
+  --color-white: #1d1f24;
+  --color-black: #ffffff;
+}
+
+:root[data-template='relief'] .app-background {
+  background: #e8eaee !important;
+}
+
+/* Seletores de data e hora nativos acompanham o esquema claro. */
+:root[data-template='relief'] .scheme-dark {
+  color-scheme: light;
 }
 
 @layer components {
@@ -156,6 +232,23 @@ html[data-window='notch'][data-notch-theme='light'] {
 /* O âmbar do Vidro some sobre branco; o laranja do Matriz não precisa de ajuste. */
 html[data-window='notch'][data-notch-theme='light']:not([data-template='matrix']) {
   --color-accent: #c98500;
+  --color-accent-ink: #fff;
+}
+
+/* O destaque quase preto do Relevo some no notch preto; no branco, serve como está. */
+html[data-window='notch'][data-template='relief'] {
+  --color-accent: #e8eaee;
+  --color-accent-ink: #1d1f24;
+}
+
+html[data-window='notch'][data-template='relief'][data-notch-theme='light'] {
+  --color-accent: #1d1f24;
+  --color-accent-ink: #f3f4f6;
+}
+
+/* O verde do Sinal precisa escurecer para ser lido sobre branco. */
+html[data-window='notch'][data-template='signal'][data-notch-theme='light'] {
+  --color-accent: #0f9d46;
   --color-accent-ink: #fff;
 }
 

@@ -4,6 +4,7 @@ import { TEMPLATES } from '@/app/templates';
 import { DotMatrixText } from '@/components/ui/DotMatrixText';
 import { Panel } from '@/components/ui/Panel';
 import { PanelLabel } from '@/components/ui/PanelLabel';
+import { BackgroundPicker } from '@/features/settings/BackgroundPicker';
 import type { TemplateId } from '@/lib/commands';
 import { useSettingsStore } from '@/stores/settings';
 
@@ -23,6 +24,37 @@ function TemplatePreview({ id }: { id: TemplateId }) {
               className={`size-1.5 rounded-full ${on ? 'bg-[#ff5a36]' : 'bg-white/15'}`}
             />
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (id === 'signal') {
+    return (
+      <div
+        aria-hidden="true"
+        className="flex h-20 flex-col justify-between rounded-lg border border-white/10 bg-[#0c0d0e] p-3 text-[#f1f4f2]"
+      >
+        <span className="font-[Segoe_UI,system-ui,sans-serif] text-lg leading-none">25:00</span>
+        <div className="flex gap-1">
+          {[1, 0.45, 1, 0.45, 0.45, 0, 0, 1, 0.45, 0].map((level, block) => (
+            <span
+              key={block}
+              style={{ opacity: level || 1 }}
+              className={`h-2 flex-1 rounded-[2px] ${level ? 'bg-[#2ee66b]' : 'bg-white/10'}`}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (id === 'relief') {
+    return (
+      <div aria-hidden="true" className="h-20 rounded-lg bg-[#e8eaee] p-2.5">
+        <div className="flex h-full flex-col justify-between rounded-2xl bg-[#e8eaee] px-3 py-2 font-[Segoe_UI,system-ui,sans-serif] text-[#1d1f24] shadow-[5px_5px_10px_rgb(163_171_186/0.6),-5px_-5px_10px_rgb(255_255_255/0.95)]">
+          <span className="text-lg leading-none font-bold">25:00</span>
+          <span className="h-1.5 w-2/3 rounded-full bg-[#1d1f24]" />
         </div>
       </div>
     );
@@ -89,6 +121,7 @@ export function AppearanceSection() {
           {error}
         </p>
       ) : null}
+      <BackgroundPicker />
     </Panel>
   );
 }

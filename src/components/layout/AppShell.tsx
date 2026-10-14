@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
 
-import { backgroundImageUrl } from '@/app/background';
+import { backgroundUrl } from '@/app/background';
 import type { ViewId } from '@/app/navigation';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TitleBar } from '@/components/layout/TitleBar';
+import { useBackgroundStore } from '@/stores/background';
+import { useSettingsStore } from '@/stores/settings';
 
 interface AppShellProps {
   activeView: ViewId;
@@ -12,6 +14,10 @@ interface AppShellProps {
 }
 
 export function AppShell({ activeView, onNavigate, children }: AppShellProps) {
+  const choice = useSettingsStore((state) => state.settings.appearance.background);
+  const customImage = useBackgroundStore((state) => state.custom);
+  const backgroundImageUrl = backgroundUrl(choice, customImage);
+
   return (
     <div className="flex h-full bg-shell py-1.5 pr-1.5">
       <Sidebar activeView={activeView} onNavigate={onNavigate} />
@@ -22,8 +28,8 @@ export function AppShell({ activeView, onNavigate, children }: AppShellProps) {
           data-testid="app-background"
           className={
             backgroundImageUrl
-              ? 'absolute inset-0 bg-cover bg-center'
-              : 'app-background-fallback absolute inset-0'
+              ? 'app-background absolute inset-0 bg-cover bg-center'
+              : 'app-background app-background-fallback absolute inset-0'
           }
           style={
             backgroundImageUrl ? { backgroundImage: `url("${backgroundImageUrl}")` } : undefined

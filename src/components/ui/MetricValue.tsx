@@ -23,7 +23,7 @@ export function MetricValue({ value }: MetricValueProps) {
 
   return (
     <p
-      className="mt-2 font-display text-4xl font-semibold tracking-tight"
+      className="mt-2 font-display text-4xl font-semibold tracking-tight signal:font-normal relief:font-bold"
       title={value === null ? 'Sem dados ainda' : undefined}
     >
       {value ?? '—'}
