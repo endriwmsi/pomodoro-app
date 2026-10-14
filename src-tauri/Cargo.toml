@@ -15,10 +15,13 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 # `bundled` compila o SQLite junto: nenhuma DLL externa, mesma versão em toda máquina.
 base64 = "0.22"
+# Só o relógio: a diferença entre o horário local e o UTC, para rotinas e expediente.
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
 rusqlite = { version = "0.40", features = ["bundled"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tauri = { version = "2", features = ["tray-icon"] }
+# `macos-private-api`: janela transparente (o notch) no macOS.
+tauri = { version = "2", features = ["tray-icon", "macos-private-api"] }
 tauri-plugin-autostart = "2"
 tauri-plugin-notification = "2"
 tauri-plugin-single-instance = "2"
@@ -30,7 +33,6 @@ ureq = "3"
 windows-sys = { version = "0.61", features = [
     "Win32_Foundation",
     "Win32_Media_Audio",
-    "Win32_System_Time",
     "Win32_UI_WindowsAndMessaging",
 ] }
 # APIs do Windows para as abas do notch: controle de mídia e volume (media/)

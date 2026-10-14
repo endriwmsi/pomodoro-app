@@ -53,39 +53,10 @@ pub trait UtcOffset: Send + Sync {
 pub struct SystemUtcOffset;
 
 impl UtcOffset for SystemUtcOffset {
-    #[cfg(windows)]
     fn offset_ms(&self) -> i64 {
-        use windows_sys::Win32::System::Time::{GetTimeZoneInformation, TIME_ZONE_INFORMATION};
-
-        /// Valores de retorno de `GetTimeZoneInformation`.
-        const DAYLIGHT: u32 = 2;
-        const INVALID: u32 = u32::MAX;
-
-        // SAFETY: a estrutura é só números e texto UTF-16 de tamanho fixo, para
-        // a qual zeros são um valor válido; a função a preenche por inteiro.
-        let (state, zone) = unsafe {
-            let mut zone: TIME_ZONE_INFORMATION = std::mem::zeroed();
-            (GetTimeZoneInformation(&mut zone), zone)
-        };
-        if state == INVALID {
-            return 0;
-        }
-        // O Windows informa o contrário: quantos minutos somar ao local para dar UTC.
-        let bias_minutes = zone.Bias
-            + if state == DAYLIGHT {
-                zone.DaylightBias
-            } else {
-                zone.StandardBias
-            };
-        -i64::from(bias_minutes) * 60_000
-    }
-
-    #[cfg(not(windows))]
-    fn offset_ms(&self) -> i64 {
-        0
+        i64::from(chrono::Local::now().offset().local_minus_utc()) * 1_000
     }
 }
-
 #[cfg(test)]
 pub mod fake {
     use std::sync::Mutex;
