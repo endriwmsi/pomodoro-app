@@ -39,6 +39,11 @@
   --color-weather-rain: #38bdf8;
   --color-weather-snow: #e0f2fe;
   --color-weather-bolt: #facc15;
+  /* Pontos dos controles da janela e o símbolo desenhado dentro deles. */
+  --color-window-minimize: #f6be4f;
+  --color-window-maximize: #5ecf6a;
+  --color-window-close: #f4635d;
+  --color-window-glyph: rgb(0 0 0 / 0.62);
 
   --radius-panel: 18px;
   --radius-card: 22px;
@@ -124,6 +129,10 @@
   --color-priority-low: #2563eb;
   --color-priority-medium: #c2710c;
   --color-priority-high: #dc2626;
+  /* Sobre o cinza-claro os pontos precisam de tons mais fechados. */
+  --color-window-minimize: #e5a520;
+  --color-window-maximize: #3fb950;
+  --color-window-close: #e5484d;
 
   --radius-panel: 30px;
   --radius-card: 28px;

@@ -40,7 +40,10 @@ A janela **não** é transparente: a moldura preta é pintada pela própria inte
 - `components/layout/Sidebar.tsx`: as áreas vazias da barra lateral também arrastam a janela.
 - `components/layout/WindowControls.tsx`: botões **Minimizar**, **Maximizar/Restaurar** e
   **Fechar** no canto superior direito, com `aria-label` e foco visível. **Fechar** envia a
-  janela para a bandeja.
+  janela para a bandeja. São três pontos coloridos (âmbar, verde e vermelho, nessa ordem — a
+  ordem do Windows, com Fechar na ponta) dentro de uma cápsula, cada um com seu símbolo sempre
+  visível. O ponto mede 13 px e o botão, 24 px. As cores vêm dos tokens `--color-window-*` (ver
+  [THEMING.md](THEMING.md)); os pontos são redondos em todos os templates.
 - `lib/window.ts`: única camada que fala com `@tauri-apps/api/window`. `watchMaximized` consulta
   `isMaximized()` ao montar e a cada `onResized`.
 

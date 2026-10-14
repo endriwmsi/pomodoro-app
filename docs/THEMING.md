@@ -28,6 +28,7 @@ fica guardada e volta ao trocar de template).
 | Relógio do Pomodoro        | Número grande                 | Matriz de pontos           | Número grande                       | Número grande                        |
 | Destaque                   | Âmbar `#f5c251`               | Laranja `#ff5a36`          | Verde `#2ee66b`                     | Quase preto `#1d1f24`                |
 | Campos e áreas "afundadas" | `--color-panel-strong` escuro | Idem                       | Idem                                | Um tom abaixo do painel              |
+| Controles da janela        | Pontos âmbar, verde, vermelho | Como no Vidro              | Como no Vidro                       | Tons mais fechados                   |
 
 As classes `matrix:`, `signal:` e `relief:` (variantes do Tailwind declaradas em `globals.css`)
 aplicam um estilo só naquele template; o Vidro é o estilo base, sem variante.
@@ -71,7 +72,8 @@ Código: `src/app/background.ts` (lista e resolução), `src/stores/background.t
 2. **Tokens.** `src/styles/globals.css` define os tokens do template padrão em `@theme`
    (`--color-panel`, `--color-panel-strong`, `--color-panel-border`, `--color-ink`,
    `--color-ink-muted`, `--color-popover`, `--color-priority-low`, `--color-priority-medium`,
-   `--color-priority-high`, `--color-accent`, `--color-accent-ink`, `--font-sans`,
+   `--color-priority-high`, `--color-window-minimize`, `--color-window-maximize`,
+   `--color-window-close`, `--color-window-glyph`, `--color-accent`, `--color-accent-ink`, `--font-sans`,
    `--font-display`, `--radius-card`) e em `:root` (`--panel-backdrop`, `--panel-highlight`,
    `--panel-shadow`, `--scrollbar-thumb`, `--scrollbar-thumb-hover`). Cada
    template adicional os sobrescreve em um bloco `:root[data-template='<id>']`. Como os
