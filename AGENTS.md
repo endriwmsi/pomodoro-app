@@ -5,7 +5,8 @@ repositório. Leia este arquivo no início de cada sessão.
 
 ## O produto
 
-**Compasso** é um aplicativo desktop para Windows, local e offline, que combina Pomodoro
+**Compasso** é um aplicativo desktop, local e offline, feito e verificado no Windows (as
+versões para Linux e macOS são experimentais — ver `docs/RELEASING.md`), que combina Pomodoro
 configurável, Kanban, dashboard de produtividade e um notch retrátil na borda superior do
 monitor principal. Não há conta nem servidor, e tudo funciona sem internet — com uma única
 exceção opcional e desligada por padrão: a previsão do tempo do notch (ver
@@ -40,6 +41,7 @@ Cada assunto tem uma única fonte de verdade. Não duplique conteúdo; referenci
 | Templates de estilização                           | [docs/THEMING.md](docs/THEMING.md)                 |
 | Estratégia e comandos de teste                     | [docs/TESTING.md](docs/TESTING.md)                 |
 | Problemas conhecidos e soluções verificadas        | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) |
+| Versões, workflows do GitHub e plataformas         | [docs/RELEASING.md](docs/RELEASING.md)             |
 | Decisões arquiteturais                             | [docs/decisions/](docs/decisions/)                 |
 | Histórico de mudanças                              | [CHANGELOG.md](CHANGELOG.md)                       |
 | Índice dos documentos (inclusive os planejados)    | [docs/README.md](docs/README.md)                   |

@@ -50,7 +50,7 @@ O serviço do timer calcula o horizonte antes de **cada** operação e o entrega
 (`Engine::set_horizon`). A engine continua pura: não lê relógio nem banco.
 
 O horário local vem do relógio UTC do timer mais a diferença de fuso do sistema
-(`timer::clock::UtcOffset`; no Windows, `GetTimeZoneInformation`, com horário de verão).
+(`timer::clock::UtcOffset`, lida do sistema com a crate `chrono`, com horário de verão).
 
 ## Como o timer se encaixa
 

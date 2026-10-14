@@ -82,6 +82,11 @@ instalada sem consumidor.
 - 2026-10-13 — Abas de música e clima: `windows` (APIs de mídia, áudio e localização), `ureq`
   (HTTP da previsão do tempo) e `base64` (capa das músicas). Justificativas e limites em
   [ADR-004](ADR-004-NETWORK-FEATURES.md), que também ajusta a premissa de aplicativo sem rede.
+- 2026-10-13 — `chrono` (só o recurso `clock`) para a diferença entre o horário local e o UTC
+  usada por rotinas e expediente. Substituiu uma chamada a `GetTimeZoneInformation`: funciona
+  igual em Windows, Linux e macOS e dispensa `unsafe`. Passaram a ser gerados pacotes
+  experimentais para Linux e macOS (ver `docs/RELEASING.md`); o Windows segue sendo a
+  plataforma de referência.
 - 2026-10-13 — Iniciar com o Windows: plugin oficial `tauri-plugin-autostart`, que grava a
   entrada em `HKCU\…\CurrentVersion\Run` (por usuário, sem exigir administrador). Alternativa
   descartada: escrever no registro com `windows-sys` — mesmo efeito, com código `unsafe`

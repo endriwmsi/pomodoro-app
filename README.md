@@ -7,8 +7,8 @@ produtividade e um notch retrátil na borda do monitor.
   servidor, anúncios nem telemetria: o aplicativo **não rastreia nada**.
 - **Funciona sem internet.** A única função que usa a rede é a previsão do tempo do notch,
   opcional e desligada por padrão — o que ela envia está em [docs/WEATHER.md](docs/WEATHER.md).
-- **Código aberto**, sob a [licença MIT](LICENSE). Autor:
-  [github.com/endriwmsi](https://github.com/endriwmsi).
+- **Código aberto**, sob a [licença MIT](LICENSE):
+  [github.com/endriwmsi/pomodoro-app](https://github.com/endriwmsi/pomodoro-app).
 
 ![Dashboard do Compasso](docs/images/dashboard.png)
 
@@ -50,8 +50,9 @@ As imagens usam dados de exemplo, gerados por `scripts/demo-data.mjs`.
 
 ## Instalar
 
-1. Obtenha o instalador `Compasso_<versão>_x64-setup.exe`. Ainda não há versões publicadas:
-   gere o seu seguindo [Gerar o instalador](#gerar-o-instalador).
+1. Baixe o instalador `Compasso_<versão>_x64-setup.exe` na página de
+   [versões](https://github.com/endriwmsi/pomodoro-app/releases) — ou gere o seu, seguindo
+   [Gerar o instalador](#gerar-o-instalador).
 2. Execute-o. O instalador não é assinado, então o Windows SmartScreen mostra um aviso: clique
    em **Mais informações → Executar assim mesmo**.
 3. Siga o assistente: apresentação, boas-vindas, licença, pasta de destino e instalação. Ele
@@ -62,8 +63,33 @@ As imagens usam dados de exemplo, gerados por `scripts/demo-data.mjs`.
 | ------------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------- |
 | ![Página de apresentação](docs/images/instalador-1.png) | ![Página de boas-vindas](docs/images/instalador-2.png) | ![Página da licença](docs/images/instalador-3.png) |
 
+Há também pacotes para Linux e macOS na mesma página — leia antes
+[Linux e macOS](#linux-e-macos).
+
 Para desinstalar, use **Configurações do Windows → Aplicativos**. Seus dados ficam em
 `%APPDATA%\com.endriwmsi.compasso\` e não são apagados pela desinstalação.
+
+## Linux e macOS
+
+**Eu só uso e testo o Compasso no Windows.** Não tenho um Mac nem uma máquina com Linux, então
+não sei exatamente como ele se comporta nesses sistemas.
+
+Os pacotes para Linux (`.deb`, `.rpm`, `.AppImage`) e macOS (`.dmg`) são gerados automaticamente
+a cada versão: o código compila e os testes automatizados passam lá, mas ninguém abriu o
+aplicativo para conferir. Trate-os como experimentais.
+
+O que já se sabe que é diferente fora do Windows:
+
+- não há controle de música nem de volume (a aba Música mostra "Nada tocando");
+- a previsão do tempo usa só as capitais, sem a localização do computador;
+- não há som de aviso ao concluir uma sessão;
+- o notch e o ícone da bandeja nunca foram vistos funcionando nesses sistemas;
+- no macOS, o aplicativo não é assinado: é preciso liberá-lo em Ajustes do Sistema →
+  Privacidade e Segurança antes de abrir.
+
+Se você testar em um desses sistemas, um relato do que funciona e do que não funciona — em uma
+[issue](https://github.com/endriwmsi/pomodoro-app/issues) — ajuda muito. Detalhes técnicos em
+[docs/RELEASING.md](docs/RELEASING.md).
 
 ## Primeiros passos
 

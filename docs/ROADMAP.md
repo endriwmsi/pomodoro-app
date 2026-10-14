@@ -297,6 +297,20 @@ Ver [ROUTINES.md](ROUTINES.md).
 - [ ] Rever Kanban, diálogos e Configurações nos templates Sinal e Relevo (só o dashboard foi
       conferido)
 
+## Publicação automática (workflows escritos; primeira execução pendente)
+
+Ver [RELEASING.md](RELEASING.md).
+
+- [x] Workflow de CI: `npm run check` no Windows; Clippy e testes do backend em Linux e macOS
+- [x] Workflow de Release por tag `v*`: instaladores para Windows, Linux e macOS (os dois
+      processadores), anexados a uma Release do GitHub
+- [x] `npm run release:version` para definir a versão em todos os arquivos
+- [x] Fuso local lido de forma portátil (`chrono`), para as rotinas valerem fora do Windows
+- [ ] **Primeira execução dos workflows no GitHub** — eles não puderam ser executados
+      localmente; erros de compilação em Linux ou macOS só aparecem lá
+- [ ] Testar o aplicativo em Linux e macOS (notch, bandeja, janelas)
+- [ ] Assinatura de código; atualização dentro do aplicativo
+
 ## Fase 8 — Polimento e distribuição (parcial)
 
 - [x] Instalador personalizado (apresentação com capturas, textos, licença MIT, imagens) —

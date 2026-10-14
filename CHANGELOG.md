@@ -108,6 +108,11 @@ Mudanças relevantes para usuários e desenvolvedores. Formato inspirado em
 - **Cor do notch** (Configurações → Notch → Cor): preto, branco ou seguir o modo claro ou
   escuro do Windows (`notch.theme`; o padrão é seguir o sistema). A cor não depende do template; um notch de
   vidro com desfoque foi experimentado e descartado.
+- **Publicação automática**: workflows do GitHub Actions para verificar cada push (Windows,
+  Linux e macOS) e, a cada tag `v*`, gerar e publicar os instaladores para os três sistemas.
+  Script `npm run release:version`; documento `docs/RELEASING.md`. Linux e macOS são
+  experimentais.
+
 - **Dois templates novos**: **Sinal** (painel de telemetria: quase preto, rótulos monoespaçados
   e blocos verdes) e **Relevo** (claro e macio, em neumorfismo, sem imagem de fundo).
 - Aba Timer do notch com os pontos do ciclo e uma barra de progresso da sessão.
@@ -144,6 +149,13 @@ Mudanças relevantes para usuários e desenvolvedores. Formato inspirado em
   100 km de uma capital, ou "Sua localização". `WeatherPlace` ganhou `detail`.
 
 ### Alterado
+
+- Controles da janela principal redesenhados: três pontos coloridos (minimizar, maximizar/
+  restaurar, fechar) em uma cápsula, cada um com seu símbolo. Novos tokens `--color-window-*`.
+- O fuso local (rotinas e expediente) passou a ser lido com a crate `chrono`, que funciona em
+  todos os sistemas, em vez de uma chamada direta à API do Windows — um bloco `unsafe` a menos.
+- `tauri.conf.json`: ícone `.icns` e `macOSPrivateApi`, para o pacote do macOS e a janela
+  transparente do notch nele.
 
 - **Notch mais largo no topo** (628 × 216): o player compacto passou a ocupar 160 px, com capa
   maior e os tempos da faixa. Na aba Timer os controles ficam junto do relógio, e na aba

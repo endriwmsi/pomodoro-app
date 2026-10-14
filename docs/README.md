@@ -17,6 +17,7 @@
 | [DATABASE.md](DATABASE.md)                       | Local do banco, migrations, esquema, regras das configurações           |
 | [THEMING.md](THEMING.md)                         | Templates de estilização e como acrescentar um                          |
 | [ANALYTICS.md](ANALYTICS.md)                     | Definição das métricas, dias e semanas, fuso, contrato das estatísticas |
+| [RELEASING.md](RELEASING.md)                     | Como publicar uma versão, workflows do GitHub, plataformas geradas      |
 | [KANBAN.md](KANBAN.md)                           | Tarefas: modelo, movimentação e ordem, vínculo com o timer, interface   |
 | [ROUTINES.md](ROUTINES.md)                       | Rotinas e expediente: modelo, encaixe dos ciclos do timer, comandos     |
 | [WEATHER.md](WEATHER.md)                         | Aba de clima: configurações, provedor, dados enviados, frequência       |
