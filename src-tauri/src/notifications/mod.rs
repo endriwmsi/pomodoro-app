@@ -12,6 +12,7 @@ use tauri::AppHandle;
 use tauri_plugin_notification::NotificationExt;
 
 use crate::database::Database;
+use crate::routines::Routine;
 use crate::settings::{self, AlertSettings};
 use crate::timer::engine::{Phase, Status, TimerSnapshot};
 use sound::Chime;
@@ -37,6 +38,17 @@ pub fn completion_message(finished: Phase, next: &TimerSnapshot) -> (String, Str
     (
         title.to_owned(),
         format!("{invitation} ({minutes} min){ending}"),
+    )
+}
+
+/// Título e texto da notificação de início de rotina.
+pub fn routine_message(routine: &Routine) -> (String, String) {
+    (
+        routine.name.clone(),
+        format!(
+            "Hora da sua rotina ({} min). O timer volta ao foco depois dela.",
+            routine.duration_minutes
+        ),
     )
 }
 
@@ -67,6 +79,32 @@ impl Alerts {
         if settings.notifications_enabled {
             let (title, body) = completion_message(finished, next);
             self.notify(title, body);
+        }
+    }
+
+    /// Avisa que uma rotina começou, conforme as preferências atuais.
+    pub fn routine_started(&self, routine: &Routine) {
+        let settings = self.settings();
+        if settings.sound_enabled {
+            self.play(Chime::FocusEnd);
+        }
+        if settings.notifications_enabled {
+            let (title, body) = routine_message(routine);
+            self.notify(title, body);
+        }
+    }
+
+    /// Avisa que o expediente acabou.
+    pub fn workday_ended(&self) {
+        let settings = self.settings();
+        if settings.sound_enabled {
+            self.play(Chime::BreakEnd);
+        }
+        if settings.notifications_enabled {
+            self.notify(
+                "Expediente encerrado".to_owned(),
+                "Nada mais começa sozinho hoje. Bom descanso!".to_owned(),
+            );
         }
     }
 
@@ -144,7 +182,30 @@ mod tests {
             cycles_before_long_break: 4,
             pause_reason: None,
             task_id: None,
+            routine_id: None,
+            routine_remaining_ms: None,
+            short: false,
         }
+    }
+
+    #[test]
+    fn a_routine_is_announced_by_its_name_and_length() {
+        let routine = Routine {
+            id: 1,
+            name: "Hora do café".to_owned(),
+            start_minute: 615,
+            duration_minutes: 15,
+            weekdays: crate::routines::EVERY_DAY,
+            enabled: true,
+        };
+
+        assert_eq!(
+            routine_message(&routine),
+            (
+                "Hora do café".to_owned(),
+                "Hora da sua rotina (15 min). O timer volta ao foco depois dela.".to_owned()
+            )
+        );
     }
 
     #[test]

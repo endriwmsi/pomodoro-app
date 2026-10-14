@@ -44,6 +44,9 @@ const IDLE: TimerSnapshot = {
   cyclesBeforeLongBreak: 4,
   pauseReason: null,
   taskId: null,
+  routineId: null,
+  routineRemainingMs: null,
+  short: false,
 };
 const RUNNING: TimerSnapshot = { ...IDLE, status: 'running' };
 

@@ -2,6 +2,7 @@ import { listen } from '@tauri-apps/api/event';
 
 import {
   NAVIGATE_EVENT,
+  ROUTINES_CHANGED_EVENT,
   SETTINGS_CHANGED_EVENT,
   TASKS_CHANGED_EVENT,
   TIMER_STATE_EVENT,
@@ -35,6 +36,13 @@ export function subscribeSettingsChanged(
 export function subscribeNavigate(handler: (view: string) => void): Promise<() => void> {
   return listen<string>(NAVIGATE_EVENT, (event) => {
     handler(event.payload);
+  });
+}
+
+/** Assina `routines:changed`: as rotinas mudaram (em qualquer janela). */
+export function subscribeRoutinesChanged(handler: () => void): Promise<() => void> {
+  return listen(ROUTINES_CHANGED_EVENT, () => {
+    handler();
   });
 }
 

@@ -1,6 +1,13 @@
-import { Kanban, LayoutDashboard, Settings, Timer, type LucideIcon } from 'lucide-react';
+import {
+  CalendarClock,
+  Kanban,
+  LayoutDashboard,
+  Settings,
+  Timer,
+  type LucideIcon,
+} from 'lucide-react';
 
-export type ViewId = 'dashboard' | 'pomodoro' | 'kanban' | 'settings';
+export type ViewId = 'dashboard' | 'pomodoro' | 'kanban' | 'routines' | 'settings';
 
 export interface NavItem {
   id: ViewId;
@@ -14,6 +21,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, placement: 'primary' },
   { id: 'pomodoro', label: 'Pomodoro', icon: Timer, placement: 'primary' },
   { id: 'kanban', label: 'Kanban', icon: Kanban, placement: 'primary' },
+  { id: 'routines', label: 'Rotina', icon: CalendarClock, placement: 'primary' },
   { id: 'settings', label: 'Configurações', icon: Settings, placement: 'secondary' },
 ];
 

@@ -5,11 +5,13 @@
 //! frontend. Ver `docs/ARCHITECTURE.md`.
 
 mod analytics;
+mod background;
 mod commands;
 mod database;
 mod error;
 mod media;
 mod notifications;
+mod routines;
 mod settings;
 mod tasks;
 mod timer;
@@ -23,12 +25,15 @@ use tauri::{AppHandle, Emitter, Manager, RunEvent, WindowEvent};
 
 use database::{Database, DATABASE_FILE};
 use notifications::Alerts;
-use timer::clock::SystemClock;
+use timer::clock::{SystemClock, SystemUtcOffset};
 use timer::engine::Phase;
 use timer::engine::TimerSnapshot;
 use timer::{Notifier, TimerService};
 use weather::{HttpFetcher, SystemLocator, WeatherService};
 use windows::notch::NotchState;
+
+/// Variável de ambiente que substitui o diretório de dados do aplicativo.
+const DATA_DIR_VARIABLE: &str = "COMPASSO_DATA_DIR";
 
 /// Evento emitido a todas as janelas quando o estado exibível do timer muda.
 const TIMER_STATE_EVENT: &str = "timer:state";
@@ -52,6 +57,14 @@ impl Notifier for AppNotifier {
             // A contagem de pomodoros da tarefa mudou.
             commands::tasks::announce_change(&self.app);
         }
+    }
+
+    fn routine_started(&self, routine: &routines::Routine) {
+        self.alerts.routine_started(routine);
+    }
+
+    fn workday_ended(&self) {
+        self.alerts.workday_ended();
     }
 }
 
@@ -121,7 +134,12 @@ pub fn run() {
             let started = (|| -> Result<(), Box<dyn std::error::Error>> {
                 // Dados do usuário ficam no diretório de dados do aplicativo
                 // (%APPDATA%\<identifier>), nunca na pasta de instalação.
-                let data_dir = app.path().app_data_dir()?;
+                // `COMPASSO_DATA_DIR` troca a pasta — para demonstrações e capturas
+                // de tela com dados de exemplo, sem tocar nos dados reais.
+                let data_dir = match std::env::var_os(DATA_DIR_VARIABLE) {
+                    Some(dir) if !dir.is_empty() => std::path::PathBuf::from(dir),
+                    _ => app.path().app_data_dir()?,
+                };
                 let database = Arc::new(Database::open(&data_dir.join(DATABASE_FILE))?);
                 let settings = database.with_conn(|conn| settings::store::load(conn))?;
 
@@ -130,6 +148,7 @@ pub fn run() {
                 let (timer, wake) = TimerService::new(
                     database.clone(),
                     clock.clone(),
+                    Arc::new(SystemUtcOffset),
                     Box::new(AppNotifier {
                         app: app.handle().clone(),
                         alerts: alerts.clone(),
@@ -142,6 +161,7 @@ pub fn run() {
                         move || timer.run_ticker(wake)
                     })?;
 
+                app.manage(Arc::new(background::BackgroundStore::new(data_dir.clone())));
                 app.manage(database);
                 app.manage(timer);
                 app.manage(alerts);
@@ -190,12 +210,19 @@ pub fn run() {
             commands::analytics::analytics_dashboard,
             commands::analytics::analytics_periods,
             commands::app::app_info,
+            commands::background::background_get_custom,
+            commands::background::background_set_custom,
             commands::notch::weather_get,
             commands::notch::media_get_state,
             commands::notch::media_control,
             commands::notch::media_get_artwork,
             commands::notch::media_seek,
             commands::notch::media_set_volume,
+            commands::routines::routines_list,
+            commands::routines::routine_create,
+            commands::routines::routine_update,
+            commands::routines::routine_delete,
+            commands::routines::routine_skip,
             commands::settings::get_settings,
             commands::settings::update_settings,
             commands::timer::timer_get_state,

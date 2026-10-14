@@ -1,12 +1,22 @@
 import { isTauri } from '@tauri-apps/api/core';
 import { Pause, Play, RotateCcw, SkipForward } from 'lucide-react';
+import { useState } from 'react';
 
 import { DotMatrixText } from '@/components/ui/DotMatrixText';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Panel } from '@/components/ui/Panel';
 import { PanelLabel } from '@/components/ui/PanelLabel';
-import type { TimerPhase, TimerSettings, TimerSnapshot, TimerStatus } from '@/lib/commands';
+import { formatMinute, nextRoutine, useNow } from '@/features/routines/schedule';
+import {
+  routineSkip,
+  type TimerPhase,
+  type TimerSettings,
+  type TimerSnapshot,
+  type TimerStatus,
+} from '@/lib/commands';
+import { toAppError } from '@/lib/errors';
 import { describeDuration, formatClock, remainingSeconds } from '@/lib/format';
+import { useRoutinesStore } from '@/stores/routines';
 import { useSettingsStore, useTemplate } from '@/stores/settings';
 import { useTasksStore } from '@/stores/tasks';
 import { useTimerStore } from '@/stores/timer';
@@ -37,6 +47,9 @@ function previewSnapshot(timer: TimerSettings): TimerSnapshot {
     cyclesBeforeLongBreak: timer.cyclesBeforeLongBreak,
     pauseReason: null,
     taskId: null,
+    routineId: null,
+    routineRemainingMs: null,
+    short: false,
   };
 }
 
@@ -110,11 +123,23 @@ export function PomodoroPage() {
     (state) => state.tasks.find((item) => item.id === live?.taskId) ?? null,
   );
 
+  const routines = useRoutinesStore((state) => state.routines);
+  const now = useNow();
+  const [routineError, setRoutineError] = useState<string | null>(null);
+
   const desktop = isTauri();
   const snapshot = live ?? previewSnapshot(timerSettings);
   const ready = desktop && live !== null;
 
-  const seconds = remainingSeconds(snapshot.remainingMs);
+  // Durante uma rotina, o relógio mostra quanto falta para ela acabar.
+  const inRoutine = snapshot.routineId !== null;
+  const routineName =
+    routines.find((routine) => routine.id === snapshot.routineId)?.name ?? 'Rotina';
+  const upcoming = inRoutine ? null : nextRoutine(routines, now);
+
+  const seconds = remainingSeconds(
+    inRoutine ? (snapshot.routineRemainingMs ?? 0) : snapshot.remainingMs,
+  );
   const clock = formatClock(seconds);
   const fraction = snapshot.plannedMs > 0 ? 1 - snapshot.remainingMs / snapshot.plannedMs : 0;
   const running = snapshot.status === 'running';
@@ -125,7 +150,9 @@ export function PomodoroPage() {
 
       <Panel aria-label="Timer" className="flex flex-col items-center px-6 py-10 text-center">
         <PanelLabel>
-          {PHASE_LABEL[snapshot.phase]} · {STATUS_LABEL[snapshot.status]}
+          {inRoutine
+            ? `Rotina · ${routineName}`
+            : `${snapshot.short ? 'Foco curto' : PHASE_LABEL[snapshot.phase]} · ${STATUS_LABEL[snapshot.status]}`}
         </PanelLabel>
 
         <div
@@ -143,6 +170,34 @@ export function PomodoroPage() {
         </div>
 
         <Progress fraction={Math.min(Math.max(fraction, 0), 1)} />
+
+        {inRoutine ? (
+          <div role="status" className="mt-5 flex max-w-md flex-col items-center gap-2 text-sm">
+            <p className="text-ink-muted">
+              {snapshot.pauseReason === 'routine'
+                ? 'O foco está em espera e volta sozinho ao fim da rotina.'
+                : 'O timer espera a rotina terminar.'}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setRoutineError(null);
+                routineSkip().catch((failure: unknown) => {
+                  setRoutineError(toAppError(failure).message);
+                });
+              }}
+              className="underline underline-offset-2 outline-none hover:text-ink focus-visible:ring-2 focus-visible:ring-white/70"
+            >
+              Pular a rotina de hoje
+            </button>
+          </div>
+        ) : upcoming ? (
+          <p className="mt-5 text-sm text-ink-muted">
+            Próximo: <span className="text-ink">{upcoming.routine.name}</span> às{' '}
+            {formatMinute(upcoming.routine.startMinute)}
+            {snapshot.short ? ' — este foco foi encurtado para terminar na hora.' : '.'}
+          </p>
+        ) : null}
 
         <p className="mt-5 flex max-w-md items-center gap-2 text-sm text-ink-muted">
           {task ? (
@@ -207,9 +262,9 @@ export function PomodoroPage() {
             tempo parado não foi contado.
           </p>
         ) : null}
-        {error ? (
+        {(error ?? routineError) ? (
           <p role="alert" className="mt-5 max-w-md text-sm text-accent">
-            Não foi possível executar a ação: {error}
+            Não foi possível executar a ação: {error ?? routineError}
           </p>
         ) : null}
         {desktop ? null : (

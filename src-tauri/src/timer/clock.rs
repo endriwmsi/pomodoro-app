@@ -42,11 +42,64 @@ impl Clock for SystemClock {
     }
 }
 
+/// Diferença entre o horário local e o UTC. As rotinas e o expediente são
+/// horários locais; o resto do timer usa UTC.
+pub trait UtcOffset: Send + Sync {
+    /// Quanto somar ao horário UTC para obter o local, em ms.
+    fn offset_ms(&self) -> i64;
+}
+
+/// O fuso configurado no sistema, com horário de verão.
+pub struct SystemUtcOffset;
+
+impl UtcOffset for SystemUtcOffset {
+    #[cfg(windows)]
+    fn offset_ms(&self) -> i64 {
+        use windows_sys::Win32::System::Time::{GetTimeZoneInformation, TIME_ZONE_INFORMATION};
+
+        /// Valores de retorno de `GetTimeZoneInformation`.
+        const DAYLIGHT: u32 = 2;
+        const INVALID: u32 = u32::MAX;
+
+        // SAFETY: a estrutura é só números e texto UTF-16 de tamanho fixo, para
+        // a qual zeros são um valor válido; a função a preenche por inteiro.
+        let (state, zone) = unsafe {
+            let mut zone: TIME_ZONE_INFORMATION = std::mem::zeroed();
+            (GetTimeZoneInformation(&mut zone), zone)
+        };
+        if state == INVALID {
+            return 0;
+        }
+        // O Windows informa o contrário: quantos minutos somar ao local para dar UTC.
+        let bias_minutes = zone.Bias
+            + if state == DAYLIGHT {
+                zone.DaylightBias
+            } else {
+                zone.StandardBias
+            };
+        -i64::from(bias_minutes) * 60_000
+    }
+
+    #[cfg(not(windows))]
+    fn offset_ms(&self) -> i64 {
+        0
+    }
+}
+
 #[cfg(test)]
 pub mod fake {
     use std::sync::Mutex;
 
-    use super::{Clock, Tick};
+    use super::{Clock, Tick, UtcOffset};
+
+    /// Fuso fixo. Com zero, o `FakeClock` começa em uma sexta-feira, às 8h.
+    pub struct FixedOffset(pub i64);
+
+    impl UtcOffset for FixedOffset {
+        fn offset_ms(&self) -> i64 {
+            self.0
+        }
+    }
 
     /// Relógio controlado pelos testes: o tempo só passa quando mandado.
     pub struct FakeClock(Mutex<Tick>);

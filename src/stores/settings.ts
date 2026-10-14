@@ -50,13 +50,14 @@ interface SettingsStore {
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
   settings: {
-    appearance: { template: readTemplateHint() },
+    appearance: { template: readTemplateHint(), background: { kind: 'default' } },
     timer: DEFAULT_TIMER_SETTINGS,
     notch: { enabled: true, position: 'top', theme: 'system' },
     alerts: { soundEnabled: true, notificationsEnabled: true },
     goals: { dailyPomodoros: null },
     weather: { enabled: false, useLocation: false },
     general: { launchAtLogin: false },
+    workday: { enabled: false, startMinute: 540, endMinute: 1080 },
   },
   status: isTauri() ? 'loading' : 'ready',
 

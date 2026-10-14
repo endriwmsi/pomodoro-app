@@ -36,13 +36,16 @@ pub async fn update_settings(
     })?;
     // Se o Windows recusar, a opção gravada volta a refletir o que vale de fato.
     if let Err(error) = crate::apply_launch_at_login(&app, saved.general.launch_at_login) {
-        let mut actual = saved;
+        let mut actual = saved.clone();
         actual.general.launch_at_login = !saved.general.launch_at_login;
         db.with_conn(|conn| store::save(conn, &actual))?;
         return Err(error);
     }
     timer.settings_changed(saved.timer)?;
+    // O expediente pode ter mudado: o timer passa a segui-lo já.
+    let routines = db.with_conn(|conn| crate::routines::store::list(conn))?;
+    timer.agenda_changed(routines, saved.workday)?;
     windows::notch::configure(&app, saved.notch)?;
-    app.emit(SETTINGS_CHANGED_EVENT, saved)?;
+    app.emit(SETTINGS_CHANGED_EVENT, &saved)?;
     Ok(saved)
 }

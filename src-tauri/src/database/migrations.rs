@@ -31,6 +31,10 @@ const MIGRATIONS: &[Migration] = &[
         version: 4,
         sql: include_str!("../../migrations/0004_analytics_index.sql"),
     },
+    Migration {
+        version: 5,
+        sql: include_str!("../../migrations/0005_routines.sql"),
+    },
 ];
 
 pub(super) fn run(conn: &mut Connection) -> Result<(), DatabaseError> {

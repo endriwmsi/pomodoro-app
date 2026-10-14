@@ -30,6 +30,7 @@ ureq = "3"
 windows-sys = { version = "0.61", features = [
     "Win32_Foundation",
     "Win32_Media_Audio",
+    "Win32_System_Time",
     "Win32_UI_WindowsAndMessaging",
 ] }
 # APIs do Windows para as abas do notch: controle de mídia e volume (media/)

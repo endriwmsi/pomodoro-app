@@ -104,12 +104,19 @@ pub fn insert_session(
     planned_ms: u64,
     at_ms: i64,
     task_id: Option<i64>,
+    short: bool,
 ) -> Result<i64, AppError> {
     conn.execute(
         "INSERT INTO pomodoro_sessions
-             (kind, planned_ms, started_at_ms, updated_at_ms, status, task_id)
-         VALUES (?1, ?2, ?3, ?3, 'active', ?4)",
-        (phase_to_db(phase), ms_to_db(planned_ms), at_ms, task_id),
+             (kind, planned_ms, started_at_ms, updated_at_ms, status, task_id, short)
+         VALUES (?1, ?2, ?3, ?3, 'active', ?4, ?5)",
+        (
+            phase_to_db(phase),
+            ms_to_db(planned_ms),
+            at_ms,
+            task_id,
+            short,
+        ),
     )?;
     Ok(conn.last_insert_rowid())
 }
@@ -218,7 +225,7 @@ mod tests {
     #[test]
     fn a_session_is_recorded_from_start_to_finish() {
         with_db(|conn| {
-            let id = insert_session(conn, Phase::Focus, 1_500_000, 1_000, None).unwrap();
+            let id = insert_session(conn, Phase::Focus, 1_500_000, 1_000, None, false).unwrap();
             checkpoint(conn, id, 10_000, 11_000).unwrap();
             finish(conn, id, Outcome::Completed, 1_500_000, 1_501_000).unwrap();
 
@@ -237,7 +244,7 @@ mod tests {
     #[test]
     fn finishing_twice_is_an_error_and_keeps_the_first_result() {
         with_db(|conn| {
-            let id = insert_session(conn, Phase::Focus, 60_000, 0, None).unwrap();
+            let id = insert_session(conn, Phase::Focus, 60_000, 0, None, false).unwrap();
             finish(conn, id, Outcome::Completed, 60_000, 60_000).unwrap();
 
             let second = finish(conn, id, Outcome::Skipped, 1, 99_999);
@@ -251,9 +258,9 @@ mod tests {
     #[test]
     fn a_second_active_session_is_refused() {
         with_db(|conn| {
-            insert_session(conn, Phase::Focus, 60_000, 0, None).unwrap();
+            insert_session(conn, Phase::Focus, 60_000, 0, None, false).unwrap();
 
-            let second = insert_session(conn, Phase::ShortBreak, 60_000, 1, None);
+            let second = insert_session(conn, Phase::ShortBreak, 60_000, 1, None, false);
 
             assert!(second.is_err());
             assert_eq!(sessions(conn).len(), 1);
@@ -263,7 +270,7 @@ mod tests {
     #[test]
     fn leftover_active_sessions_are_closed_at_their_last_checkpoint() {
         with_db(|conn| {
-            let id = insert_session(conn, Phase::Focus, 1_500_000, 1_000, None).unwrap();
+            let id = insert_session(conn, Phase::Focus, 1_500_000, 1_000, None, false).unwrap();
             checkpoint(conn, id, 40_000, 41_000).unwrap();
 
             let closed = interrupt_active(conn).unwrap();

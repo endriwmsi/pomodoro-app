@@ -50,7 +50,7 @@ pub struct Dashboard {
 /// Totais de foco de um período.
 fn period(conn: &Connection, start_ms: i64, end_ms: i64) -> Result<PeriodStats, AppError> {
     let (completed_pomodoros, focus_ms): (u32, i64) = conn.query_row(
-        "SELECT COUNT(*) FILTER (WHERE status = 'completed'),
+        "SELECT COUNT(*) FILTER (WHERE status = 'completed' AND short = 0),
                 COALESCE(SUM(elapsed_ms), 0)
            FROM pomodoro_sessions
           WHERE kind = 'focus' AND ended_at_ms >= ?1 AND ended_at_ms < ?2",
@@ -154,6 +154,7 @@ mod tests {
             (25 * MINUTE) as u64,
             ended_at_ms - elapsed,
             None,
+            false,
         )
         .unwrap();
         sessions::finish(conn, id, outcome, elapsed as u64, ended_at_ms).unwrap();
@@ -295,7 +296,8 @@ mod tests {
     #[test]
     fn a_session_still_in_progress_is_not_counted() {
         with_db(|conn| {
-            sessions::insert_session(conn, Phase::Focus, 1_500_000, MONDAY + HOUR, None).unwrap();
+            sessions::insert_session(conn, Phase::Focus, 1_500_000, MONDAY + HOUR, None, false)
+                .unwrap();
 
             let monday = periods(conn, &week()).unwrap()[0];
 

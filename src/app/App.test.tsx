@@ -1,9 +1,9 @@
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { App } from '@/app/App';
-import { backgroundImageUrl } from '@/app/background';
+import { BUILTIN_BACKGROUNDS } from '@/app/background';
 import { applyTemplate, readTemplateHint } from '@/app/templates';
 import { useSettingsStore } from '@/stores/settings';
 
@@ -23,7 +23,7 @@ describe('App', () => {
     const labels = within(nav)
       .getAllByRole('button')
       .map((button) => button.getAttribute('aria-label'));
-    expect(labels).toEqual(['Dashboard', 'Pomodoro', 'Kanban', 'Configurações']);
+    expect(labels).toEqual(['Dashboard', 'Pomodoro', 'Kanban', 'Rotina', 'Configurações']);
     expect(within(nav).getByRole('button', { name: 'Dashboard' })).toHaveAttribute(
       'aria-current',
       'page',
@@ -49,17 +49,24 @@ describe('App', () => {
     }
   });
 
-  // Depende de existir ou não um arquivo src/assets/background.*, que é do usuário.
-  it('usa a imagem de fundo fornecida ou, sem ela, o gradiente de fallback', () => {
+  it('usa a primeira imagem de fundo embutida por padrão e o gradiente quando não há imagem', () => {
     render(<App />);
-
     const background = screen.getByTestId('app-background');
-    if (backgroundImageUrl === undefined) {
-      expect(background).toHaveClass('app-background-fallback');
-    } else {
-      expect(background).not.toHaveClass('app-background-fallback');
-      expect(background.style.backgroundImage).toContain(backgroundImageUrl);
-    }
+    const [first] = BUILTIN_BACKGROUNDS;
+    if (!first) throw new Error('sem imagens embutidas');
+    expect(background).not.toHaveClass('app-background-fallback');
+    expect(background.style.backgroundImage).toContain(first.url);
+
+    const settings = useSettingsStore.getState().settings;
+    act(() => {
+      useSettingsStore.setState({
+        settings: {
+          ...settings,
+          appearance: { ...settings.appearance, background: { kind: 'none' } },
+        },
+      });
+    });
+    expect(background).toHaveClass('app-background-fallback');
   });
 
   it('informa que a versão só existe dentro do app desktop', async () => {

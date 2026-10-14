@@ -6,7 +6,9 @@
 
 pub mod analytics;
 pub mod app;
+pub mod background;
 pub mod notch;
+pub mod routines;
 pub mod settings;
 pub mod tasks;
 pub mod timer;

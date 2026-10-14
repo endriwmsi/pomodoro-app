@@ -6,7 +6,7 @@ use serde::Serialize;
 
 use super::{
     AlertSettings, AppearanceSettings, GeneralSettings, GoalSettings, NotchSettings, Settings,
-    TimerSettings, WeatherSettings,
+    TimerSettings, WeatherSettings, WorkdaySettings,
 };
 use crate::error::AppError;
 
@@ -17,6 +17,7 @@ const KEY_ALERTS: &str = "alerts";
 const KEY_GOALS: &str = "goals";
 const KEY_WEATHER: &str = "weather";
 const KEY_GENERAL: &str = "general";
+const KEY_WORKDAY: &str = "workday";
 
 /// Carrega as configurações. Seções ausentes, ilegíveis ou fora dos limites
 /// voltam ao padrão: uma linha danificada não pode impedir o aplicativo de
@@ -35,6 +36,11 @@ pub fn load(conn: &Connection) -> Result<Settings, AppError> {
         eprintln!("metas inválidas no banco; usando o padrão ({error})");
         goals = GoalSettings::default();
     }
+    let mut workday: WorkdaySettings = load_section(conn, KEY_WORKDAY)?;
+    if let Err(error) = workday.validate() {
+        eprintln!("expediente inválido no banco; usando o padrão ({error})");
+        workday = WorkdaySettings::default();
+    }
     Ok(Settings {
         appearance,
         timer,
@@ -43,6 +49,7 @@ pub fn load(conn: &Connection) -> Result<Settings, AppError> {
         goals,
         weather: load_section::<WeatherSettings>(conn, KEY_WEATHER)?,
         general: load_section::<GeneralSettings>(conn, KEY_GENERAL)?,
+        workday,
     })
 }
 
@@ -57,6 +64,7 @@ pub fn save(conn: &mut Connection, settings: &Settings) -> Result<(), AppError> 
     save_section(&tx, KEY_GOALS, &settings.goals)?;
     save_section(&tx, KEY_WEATHER, &settings.weather)?;
     save_section(&tx, KEY_GENERAL, &settings.general)?;
+    save_section(&tx, KEY_WORKDAY, &settings.workday)?;
     tx.commit()?;
     Ok(())
 }
@@ -100,6 +108,9 @@ mod tests {
         Settings {
             appearance: AppearanceSettings {
                 template: Template::Matrix,
+                background: crate::settings::Background::Builtin {
+                    name: "nuvens".to_owned(),
+                },
             },
             timer: TimerSettings {
                 focus_minutes: 50,
@@ -127,6 +138,11 @@ mod tests {
             },
             general: GeneralSettings {
                 launch_at_login: true,
+            },
+            workday: WorkdaySettings {
+                enabled: true,
+                start_minute: 480,
+                end_minute: 1020,
             },
         }
     }
@@ -168,7 +184,7 @@ mod tests {
             db.with_conn(|conn| load(conn)).unwrap(),
             Settings::default()
         );
-        assert_eq!(stored_rows(&db), 7);
+        assert_eq!(stored_rows(&db), 8);
     }
 
     #[test]

@@ -69,7 +69,7 @@ pub fn list(conn: &Connection) -> Result<Vec<Task>, AppError> {
         "SELECT t.id, t.title, t.description, t.priority, t.status, t.position, t.due_date,
                 t.estimated_pomodoros, t.created_at_ms, t.updated_at_ms, t.completed_at_ms,
                 (SELECT COUNT(*) FROM pomodoro_sessions s
-                  WHERE s.task_id = t.id AND s.kind = 'focus' AND s.status = 'completed')
+                  WHERE s.task_id = t.id AND s.kind = 'focus' AND s.status = 'completed' AND s.short = 0)
            FROM tasks t
           ORDER BY CASE t.status WHEN 'todo' THEN 0 WHEN 'doing' THEN 1 ELSE 2 END,
                    t.position, t.id",
@@ -528,7 +528,7 @@ mod tests {
             let ids = seed(conn, &["Com sessões", "Sem sessões"]);
             let task = Some(ids[0]);
             let session = |phase, outcome| {
-                let id = sessions::insert_session(conn, phase, 60_000, 0, task).unwrap();
+                let id = sessions::insert_session(conn, phase, 60_000, 0, task, false).unwrap();
                 sessions::finish(conn, id, outcome, 60_000, 60_000).unwrap();
             };
             session(Phase::Focus, Outcome::Completed);
@@ -549,7 +549,8 @@ mod tests {
         with_db(|conn| {
             let ids = seed(conn, &["A"]);
             let session =
-                sessions::insert_session(conn, Phase::Focus, 60_000, 0, Some(ids[0])).unwrap();
+                sessions::insert_session(conn, Phase::Focus, 60_000, 0, Some(ids[0]), false)
+                    .unwrap();
             sessions::finish(conn, session, Outcome::Completed, 60_000, 60_000).unwrap();
 
             delete(conn, ids[0]).unwrap();
@@ -568,7 +569,7 @@ mod tests {
     #[test]
     fn a_session_cannot_point_to_a_task_that_does_not_exist() {
         with_db(|conn| {
-            let result = sessions::insert_session(conn, Phase::Focus, 60_000, 0, Some(999));
+            let result = sessions::insert_session(conn, Phase::Focus, 60_000, 0, Some(999), false);
 
             assert!(result.is_err());
         });

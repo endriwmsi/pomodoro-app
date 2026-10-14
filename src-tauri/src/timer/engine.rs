@@ -6,6 +6,7 @@
 use serde::Serialize;
 
 use super::clock::Tick;
+use crate::routines::Horizon;
 use crate::settings::TimerSettings;
 
 /// Intervalo entre duas leituras acima do qual se presume que o computador
@@ -40,7 +41,17 @@ pub enum PauseReason {
     User,
     /// Pausa automática após um salto de tempo (suspensão do computador).
     Suspend,
+    /// O foco cedeu a vez a uma rotina e é retomado sozinho quando ela acaba.
+    Routine,
 }
+
+/// Menor foco que vale a pena encaixar antes de uma âncora. Sobras menores
+/// são somadas à pausa anterior.
+pub const MIN_FOCUS_MS: u64 = 10 * 60_000;
+/// Um foco a que falte até isto termina antes de ceder a vez a uma rotina.
+pub const FINISH_BEFORE_ROUTINE_MS: u64 = 5 * 60_000;
+/// Nenhuma sessão é planejada com menos que isto, por mais perto que a âncora esteja.
+const MIN_SESSION_MS: u64 = 60_000;
 
 /// Como uma sessão terminou.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -63,6 +74,8 @@ pub enum Effect {
         at_ms: i64,
         /// Tarefa a que a sessão é dedicada (só sessões de foco têm tarefa).
         task_id: Option<i64>,
+        /// Foco encurtado para caber antes de uma âncora: não soma um pomodoro.
+        short: bool,
     },
     /// Progresso da sessão em andamento.
     Checkpoint { elapsed_ms: u64, at_ms: i64 },
@@ -89,6 +102,12 @@ pub struct TimerSnapshot {
     pub pause_reason: Option<PauseReason>,
     /// Tarefa escolhida para os focos (a engine só a guarda e repassa).
     pub task_id: Option<i64>,
+    /// Rotina em andamento agora e quanto falta para ela acabar.
+    pub routine_id: Option<i64>,
+    pub routine_remaining_ms: Option<u64>,
+    /// O foco (em andamento ou o próximo) é mais curto que o configurado,
+    /// para caber antes de uma rotina ou do fim do expediente.
+    pub short: bool,
 }
 
 impl TimerSnapshot {
@@ -121,6 +140,12 @@ pub struct Engine {
     last_tick: Option<Tick>,
     /// Tarefa escolhida para os focos.
     task_id: Option<i64>,
+    /// O que os horários fixos dizem sobre o instante da operação em curso.
+    /// Quem chama o atualiza antes de cada operação.
+    horizon: Horizon,
+    /// O timer estava trabalhando quando uma rotina começou: ao fim dela, o
+    /// próximo foco começa sozinho.
+    resume_after_routine: bool,
 }
 
 fn minutes_to_ms(minutes: u32) -> u64 {
@@ -144,7 +169,15 @@ impl Engine {
             pause_reason: None,
             session: None,
             last_tick: None,
+            horizon: Horizon::FREE,
+            resume_after_routine: false,
         }
+    }
+
+    /// Informa o que os horários fixos (rotinas e expediente) dizem sobre
+    /// agora. Deve ser chamado antes de cada operação.
+    pub fn set_horizon(&mut self, horizon: Horizon) {
+        self.horizon = horizon;
     }
 
     pub fn phase(&self) -> Phase {
@@ -193,6 +226,9 @@ impl Engine {
             cycles_before_long_break: self.settings.cycles_before_long_break,
             pause_reason: self.pause_reason,
             task_id: self.task_id,
+            routine_id: self.horizon.routine.map(|routine| routine.id),
+            routine_remaining_ms: self.horizon.routine.map(|routine| routine.remaining_ms),
+            short: self.phase == Phase::Focus && planned_ms < self.configured_for(Phase::Focus),
         }
     }
 
@@ -206,12 +242,19 @@ impl Engine {
     /// início de toda operação, de modo que nenhuma decisão use tempo velho.
     pub fn sync(&mut self, now: Tick) -> Vec<Effect> {
         let mut effects = Vec::new();
+        self.advance_time(now, &mut effects);
+        self.follow_routine(now, &mut effects);
+        effects
+    }
+
+    /// Credita o tempo decorrido à sessão que está rodando e a conclui, se for o caso.
+    fn advance_time(&mut self, now: Tick, effects: &mut Vec<Effect>) {
         if self.status != Status::Running {
-            return effects;
+            return;
         }
         // Cópia de trabalho; é gravada de volta antes de qualquer transição.
         let Some(mut session) = self.session else {
-            return effects;
+            return;
         };
 
         if let Some(last) = self.last_tick.replace(now) {
@@ -229,7 +272,7 @@ impl Engine {
                 self.status = Status::Paused;
                 self.pause_reason = Some(PauseReason::Suspend);
                 self.last_tick = None;
-                return effects;
+                return;
             }
             session.elapsed_ms = session.elapsed_ms.saturating_add(mono_delta);
         }
@@ -241,10 +284,16 @@ impl Engine {
         self.session = Some(session);
 
         if session.elapsed_ms >= session.planned_ms {
-            self.finish(Outcome::Completed, now, &mut effects);
+            self.finish(Outcome::Completed, now, effects);
             self.advance();
-            if self.auto_starts(self.phase) {
-                self.begin(now, &mut effects);
+            if self.horizon.routine.is_some() {
+                // A rotina faz as vezes da pausa que viria agora.
+                if self.phase != Phase::Focus {
+                    self.advance();
+                }
+                self.resume_after_routine = true;
+            } else if self.auto_starts(self.phase) {
+                self.begin(now, effects);
             }
         } else if checkpoint_due {
             effects.push(Effect::Checkpoint {
@@ -252,7 +301,45 @@ impl Engine {
                 at_ms: now.wall_ms,
             });
         }
-        effects
+    }
+
+    /// Cede a vez a uma rotina que começou e retoma o trabalho quando ela acaba.
+    fn follow_routine(&mut self, now: Tick, effects: &mut Vec<Effect>) {
+        if self.horizon.routine.is_none() {
+            if self.status == Status::Paused && self.pause_reason == Some(PauseReason::Routine) {
+                self.status = Status::Running;
+                self.pause_reason = None;
+                self.last_tick = Some(now);
+            } else if self.resume_after_routine {
+                self.resume_after_routine = false;
+                if self.status == Status::Idle && self.phase == Phase::Focus {
+                    self.begin(now, effects);
+                }
+            }
+            return;
+        }
+        if self.status != Status::Running {
+            return;
+        }
+        let Some(session) = self.session.as_mut() else {
+            return;
+        };
+        if self.phase != Phase::Focus {
+            // A pausa em andamento dá lugar à rotina.
+            self.finish(Outcome::Skipped, now, effects);
+            self.advance();
+            self.resume_after_routine = true;
+        } else if session.planned_ms - session.elapsed_ms > FINISH_BEFORE_ROUTINE_MS {
+            session.checkpointed_ms = session.elapsed_ms;
+            effects.push(Effect::Checkpoint {
+                elapsed_ms: session.elapsed_ms,
+                at_ms: now.wall_ms,
+            });
+            self.status = Status::Paused;
+            self.pause_reason = Some(PauseReason::Routine);
+            self.last_tick = None;
+        }
+        // Senão: falta pouco, o foco termina antes (ver `advance_time`).
     }
 
     /// Inicia a fase atual ou retoma a sessão pausada.
@@ -261,6 +348,7 @@ impl Engine {
         if settled {
             return effects;
         }
+        self.resume_after_routine = false;
         match self.status {
             Status::Idle => self.begin(now, &mut effects),
             Status::Paused => {
@@ -277,6 +365,11 @@ impl Engine {
         let (mut effects, settled) = self.sync_for_command(now);
         if settled {
             return effects;
+        }
+        // Pausar durante uma rotina é uma decisão do usuário: nada recomeça sozinho.
+        self.resume_after_routine = false;
+        if self.pause_reason == Some(PauseReason::Routine) {
+            self.pause_reason = Some(PauseReason::User);
         }
         if self.status == Status::Running {
             if let Some(session) = self.session.as_mut() {
@@ -299,6 +392,7 @@ impl Engine {
         if settled {
             return effects;
         }
+        self.resume_after_routine = false;
         if self.session.is_some() {
             self.finish(Outcome::Skipped, now, &mut effects);
         }
@@ -317,6 +411,7 @@ impl Engine {
         if settled {
             return effects;
         }
+        self.resume_after_routine = false;
         if self.phase != Phase::Focus {
             if self.session.is_some() {
                 self.finish(Outcome::Skipped, now, &mut effects);
@@ -341,6 +436,7 @@ impl Engine {
         if settled {
             return effects;
         }
+        self.resume_after_routine = false;
         if self.session.is_some() {
             self.finish(Outcome::Reset, now, &mut effects);
         }
@@ -387,6 +483,7 @@ impl Engine {
             task_id: (self.phase == Phase::Focus)
                 .then_some(self.task_id)
                 .flatten(),
+            short: self.phase == Phase::Focus && planned_ms < self.configured_for(Phase::Focus),
         });
     }
 
@@ -424,14 +521,38 @@ impl Engine {
         }
     }
 
+    /// Nada começa sozinho durante uma rotina nem fora do expediente.
     fn auto_starts(&self, phase: Phase) -> bool {
+        if self.horizon.routine.is_some() || !self.horizon.in_workday {
+            return false;
+        }
         match phase {
             Phase::Focus => self.settings.auto_start_focus,
             Phase::ShortBreak | Phase::LongBreak => self.settings.auto_start_breaks,
         }
     }
 
+    /// Duração da próxima sessão de `phase`, encaixada no tempo que resta até
+    /// a próxima âncora (rotina ou fim do expediente):
+    ///
+    /// - o foco nunca passa da âncora — se não couber inteiro, é um foco curto;
+    /// - a pausa absorve a sobra que não daria um foco de [`MIN_FOCUS_MS`], e
+    ///   é encurtada se a âncora chegar antes do fim dela.
     fn planned_for(&self, phase: Phase) -> u64 {
+        let configured = self.configured_for(phase);
+        let Some(room) = self.horizon.anchor_in_ms else {
+            return configured;
+        };
+        let fitted = match phase {
+            Phase::Focus => configured.min(room),
+            Phase::ShortBreak | Phase::LongBreak if room < configured + MIN_FOCUS_MS => room,
+            Phase::ShortBreak | Phase::LongBreak => configured,
+        };
+        fitted.max(MIN_SESSION_MS)
+    }
+
+    /// Duração configurada para `phase`, sem considerar as âncoras.
+    fn configured_for(&self, phase: Phase) -> u64 {
         minutes_to_ms(match phase {
             Phase::Focus => self.settings.focus_minutes,
             Phase::ShortBreak => self.settings.short_break_minutes,
@@ -523,6 +644,7 @@ mod tests {
                 planned_ms: 25 * MINUTE,
                 at_ms: WALL_ORIGIN,
                 task_id: None,
+                short: false,
             }]
         );
         assert_eq!(engine.snapshot().status, Status::Running);
@@ -913,7 +1035,10 @@ mod tests {
                 "cyclePosition": 0,
                 "cyclesBeforeLongBreak": 4,
                 "pauseReason": "user",
-                "taskId": null
+                "taskId": null,
+                "routineId": null,
+                "routineRemainingMs": null,
+                "short": false,
             })
         );
         assert_eq!(
@@ -1006,5 +1131,217 @@ mod tests {
         assert!(finished(&effects).is_empty(), "nenhuma pausa foi iniciada");
         assert_eq!(started(&effects), vec![Phase::Focus]);
         assert_eq!(engine.snapshot().cycle_position, 0);
+    }
+
+    // --- Rotinas e expediente -------------------------------------------------
+
+    use crate::routines::ActiveRoutine;
+
+    fn anchored(room_ms: u64) -> Horizon {
+        Horizon {
+            anchor_in_ms: Some(room_ms),
+            ..Horizon::FREE
+        }
+    }
+
+    fn in_routine(remaining_ms: u64) -> Horizon {
+        Horizon {
+            routine: Some(ActiveRoutine {
+                id: 7,
+                remaining_ms,
+            }),
+            ..Horizon::FREE
+        }
+    }
+
+    fn planned_of_started(effects: &[Effect]) -> Vec<(Phase, u64, bool)> {
+        effects
+            .iter()
+            .filter_map(|effect| match effect {
+                Effect::Started {
+                    phase,
+                    planned_ms,
+                    short,
+                    ..
+                } => Some((*phase, *planned_ms, *short)),
+                _ => None,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn a_focus_that_does_not_fit_before_the_anchor_is_a_short_one() {
+        let mut engine = engine();
+        engine.set_horizon(anchored(15 * MINUTE));
+        // Parado, o tempo mostrado já é o que cabe.
+        assert_eq!(engine.snapshot().planned_ms, 15 * MINUTE);
+        assert!(engine.snapshot().short);
+
+        let effects = engine.start(at(0));
+
+        assert_eq!(
+            planned_of_started(&effects),
+            [(Phase::Focus, 15 * MINUTE, true)]
+        );
+        assert!(engine.snapshot().short);
+    }
+
+    #[test]
+    fn a_focus_that_fits_keeps_the_configured_length() {
+        let mut engine = engine();
+        engine.set_horizon(anchored(40 * MINUTE));
+
+        let effects = engine.start(at(0));
+
+        assert_eq!(
+            planned_of_started(&effects),
+            [(Phase::Focus, 25 * MINUTE, false)]
+        );
+        assert!(!engine.snapshot().short);
+    }
+
+    #[test]
+    fn a_break_absorbs_a_leftover_too_small_for_a_focus() {
+        let planned = |room_minutes: u64| {
+            let mut engine = Engine::new(TimerSettings::default(), Phase::ShortBreak, 1, None);
+            engine.set_horizon(anchored(room_minutes * MINUTE));
+            planned_of_started(&engine.start(at(0)))[0].1 / MINUTE
+        };
+
+        // 5 de pausa e sobrariam 7: pouco para um foco, a pausa vai até a âncora.
+        assert_eq!(planned(12), 12);
+        // Sobram exatos 10 depois da pausa: cabe um foco curto.
+        assert_eq!(planned(15), 5);
+        assert_eq!(planned(60), 5);
+        // A âncora chega antes do fim da pausa: ela é encurtada.
+        assert_eq!(planned(3), 3);
+    }
+
+    #[test]
+    fn no_session_is_planned_shorter_than_a_minute() {
+        let mut engine = engine();
+        engine.set_horizon(anchored(5 * SECOND));
+
+        let effects = engine.start(at(0));
+
+        assert_eq!(planned_of_started(&effects), [(Phase::Focus, MINUTE, true)]);
+    }
+
+    #[test]
+    fn a_routine_pauses_the_focus_and_it_resumes_with_the_time_it_had_left() {
+        let mut engine = engine();
+        engine.start(at(0));
+        run(&mut engine, 0, 10 * MINUTE);
+
+        engine.set_horizon(in_routine(15 * MINUTE));
+        let (effects, now) = run(&mut engine, 10 * MINUTE, 15 * MINUTE);
+
+        let snapshot = engine.snapshot();
+        assert_eq!(snapshot.status, Status::Paused);
+        assert_eq!(snapshot.pause_reason, Some(PauseReason::Routine));
+        assert_eq!(snapshot.routine_id, Some(7));
+        // O progresso foi gravado ao pausar; a rotina não conta como foco.
+        assert_eq!(snapshot.remaining_ms, 15 * MINUTE - SECOND);
+        assert!(matches!(effects[..], [Effect::Checkpoint { .. }]));
+
+        engine.set_horizon(Horizon::FREE);
+        let (effects, _) = run(&mut engine, now, 15 * MINUTE);
+
+        assert_eq!(finished(&effects), [(Outcome::Completed, 25 * MINUTE)]);
+    }
+
+    #[test]
+    fn a_focus_about_to_end_finishes_first_and_the_routine_replaces_the_break() {
+        let mut engine = engine();
+        engine.start(at(0));
+        run(&mut engine, 0, 22 * MINUTE);
+
+        engine.set_horizon(in_routine(15 * MINUTE));
+        let (effects, now) = run(&mut engine, 22 * MINUTE, 5 * MINUTE);
+
+        assert_eq!(finished(&effects), [(Outcome::Completed, 25 * MINUTE)]);
+        assert!(started(&effects).is_empty(), "nada começa durante a rotina");
+        let snapshot = engine.snapshot();
+        assert_eq!(
+            (snapshot.phase, snapshot.status),
+            (Phase::Focus, Status::Idle)
+        );
+        assert_eq!(snapshot.cycle_position, 1);
+
+        // Ao fim da rotina, o foco seguinte começa sozinho.
+        engine.set_horizon(Horizon::FREE);
+        let effects = engine.sync(at(now + SECOND));
+        assert_eq!(started(&effects), [Phase::Focus]);
+    }
+
+    #[test]
+    fn a_running_break_gives_way_to_the_routine_and_focus_follows_it() {
+        let mut engine = Engine::new(TimerSettings::default(), Phase::ShortBreak, 1, None);
+        engine.start(at(0));
+        run(&mut engine, 0, 2 * MINUTE);
+
+        engine.set_horizon(in_routine(15 * MINUTE));
+        let effects = engine.sync(at(2 * MINUTE + SECOND));
+
+        assert_eq!(
+            finished(&effects),
+            [(Outcome::Skipped, 2 * MINUTE + SECOND)]
+        );
+        assert_eq!(engine.snapshot().phase, Phase::Focus);
+        assert_eq!(engine.snapshot().status, Status::Idle);
+
+        engine.set_horizon(Horizon::FREE);
+        assert_eq!(started(&engine.sync(at(20 * MINUTE))), [Phase::Focus]);
+    }
+
+    #[test]
+    fn a_timer_that_was_idle_stays_idle_through_a_routine() {
+        let mut engine = engine();
+
+        engine.set_horizon(in_routine(15 * MINUTE));
+        assert!(engine.sync(at(MINUTE)).is_empty());
+        engine.set_horizon(Horizon::FREE);
+        assert!(engine.sync(at(20 * MINUTE)).is_empty());
+
+        assert_eq!(engine.snapshot().status, Status::Idle);
+    }
+
+    #[test]
+    fn pausing_during_a_routine_cancels_the_automatic_resume() {
+        let mut engine = engine();
+        engine.start(at(0));
+        run(&mut engine, 0, 10 * MINUTE);
+        engine.set_horizon(in_routine(15 * MINUTE));
+        engine.sync(at(10 * MINUTE + SECOND));
+
+        engine.pause(at(11 * MINUTE));
+        assert_eq!(engine.snapshot().pause_reason, Some(PauseReason::User));
+
+        engine.set_horizon(Horizon::FREE);
+        engine.sync(at(30 * MINUTE));
+        assert_eq!(engine.snapshot().status, Status::Paused);
+    }
+
+    #[test]
+    fn nothing_starts_by_itself_outside_the_workday() {
+        let settings = TimerSettings {
+            auto_start_breaks: true,
+            auto_start_focus: true,
+            ..TimerSettings::default()
+        };
+        let mut engine = Engine::new(settings, Phase::Focus, 0, None);
+        engine.start(at(0));
+        engine.set_horizon(Horizon {
+            in_workday: false,
+            ..Horizon::FREE
+        });
+
+        let (effects, _) = run(&mut engine, 0, 25 * MINUTE);
+
+        assert_eq!(finished(&effects), [(Outcome::Completed, 25 * MINUTE)]);
+        assert!(started(&effects).is_empty());
+        assert_eq!(engine.snapshot().status, Status::Idle);
+        // Mas o usuário pode iniciar por conta própria.
+        assert_eq!(started(&engine.start(at(26 * MINUTE))), [Phase::ShortBreak]);
     }
 }

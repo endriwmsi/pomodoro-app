@@ -71,6 +71,9 @@ const FOCUSING: TimerSnapshot = {
   cyclesBeforeLongBreak: 4,
   pauseReason: null,
   taskId: 1,
+  routineId: null,
+  routineRemainingMs: null,
+  short: false,
 };
 
 async function renderBoard(tasks: Task[] = BOARD) {

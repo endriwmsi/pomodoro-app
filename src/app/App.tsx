@@ -7,8 +7,11 @@ import { AppShell } from '@/components/layout/AppShell';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { KanbanPage } from '@/features/kanban/KanbanPage';
 import { PomodoroPage } from '@/features/pomodoro/PomodoroPage';
+import { RoutinesPage } from '@/features/routines/RoutinesPage';
 import { SettingsPage } from '@/features/settings/SettingsPage';
 import { subscribeNavigate } from '@/lib/events';
+import { useBackgroundStore } from '@/stores/background';
+import { useRoutinesStore } from '@/stores/routines';
 import { useSettingsStore, useTemplate } from '@/stores/settings';
 import { useTasksStore } from '@/stores/tasks';
 import { useTimerStore } from '@/stores/timer';
@@ -17,6 +20,7 @@ const VIEWS: Record<ViewId, () => React.JSX.Element> = {
   dashboard: DashboardPage,
   pomodoro: PomodoroPage,
   kanban: KanbanPage,
+  routines: RoutinesPage,
   settings: SettingsPage,
 };
 
@@ -28,6 +32,9 @@ export function App() {
   const template = useTemplate();
 
   useEffect(() => connectSettings(), [connectSettings]);
+
+  const loadBackground = useBackgroundStore((state) => state.load);
+  useEffect(() => void loadBackground(), [loadBackground]);
 
   // A bandeja e o notch podem pedir uma tela específica (ex.: Configurações).
   useEffect(() => {
@@ -60,6 +67,9 @@ export function App() {
 
   const connectTasks = useTasksStore((state) => state.connect);
   useEffect(() => connectTasks(), [connectTasks]);
+
+  const connectRoutines = useRoutinesStore((state) => state.connect);
+  useEffect(() => connectRoutines(), [connectRoutines]);
 
   return (
     <AppShell activeView={view} onNavigate={setView}>

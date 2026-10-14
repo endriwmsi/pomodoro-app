@@ -12,7 +12,15 @@ export interface AppInfo {
 }
 
 /** Espelha `settings::Template`. */
-export type TemplateId = 'glass' | 'matrix';
+export type TemplateId = 'glass' | 'matrix' | 'signal' | 'relief';
+
+/**
+ * Espelha `settings::Background`: a imagem de fundo da janela principal.
+ * `default` é a primeira imagem embutida; `builtin` aponta uma delas pelo nome
+ * do arquivo; `custom` é a imagem enviada pelo usuário; `none`, só o gradiente.
+ */
+export type BackgroundChoice =
+  { kind: 'default' } | { kind: 'none' } | { kind: 'builtin'; name: string } | { kind: 'custom' };
 
 /** Espelha `settings::TimerSettings`. */
 export interface TimerSettings {
@@ -32,7 +40,7 @@ export type NotchPosition = 'top' | 'left' | 'right';
 export type NotchTheme = 'dark' | 'light' | 'system';
 
 export interface Settings {
-  appearance: { template: TemplateId };
+  appearance: { template: TemplateId; background: BackgroundChoice };
   timer: TimerSettings;
   notch: { enabled: boolean; position: NotchPosition; theme: NotchTheme };
   alerts: { soundEnabled: boolean; notificationsEnabled: boolean };
@@ -42,6 +50,8 @@ export interface Settings {
   weather: { enabled: boolean; useLocation: boolean };
   /** `launchAtLogin`: abrir o Compasso ao entrar no Windows. */
   general: { launchAtLogin: boolean };
+  /** Expediente: início e fim em minutos desde a meia-noite, no fuso local. */
+  workday: { enabled: boolean; startMinute: number; endMinute: number };
 }
 
 export const SETTINGS_CHANGED_EVENT = 'settings:changed';
@@ -77,9 +87,54 @@ export interface TimerSnapshot {
   cyclePosition: number;
   cyclesBeforeLongBreak: number;
   /** `suspend`: pausa automática após suspensão do computador. */
-  pauseReason: 'user' | 'suspend' | null;
+  /** `routine`: o foco cedeu a vez a uma rotina e volta sozinho ao fim dela. */
+  pauseReason: 'user' | 'suspend' | 'routine' | null;
   /** Tarefa escolhida para os focos, se houver. */
   taskId: number | null;
+  /** Rotina em andamento agora e quanto falta para ela acabar. */
+  routineId: number | null;
+  routineRemainingMs: number | null;
+  /** O foco (atual ou o próximo) é mais curto que o configurado, para caber antes de uma rotina ou do fim do expediente. */
+  short: boolean;
+}
+
+/** Espelha `routines::Routine`. */
+export interface Routine {
+  id: number;
+  name: string;
+  /** Início, em minutos desde a meia-noite (fuso local). */
+  startMinute: number;
+  durationMinutes: number;
+  /** Dias em que vale: um bit por dia, do 1 (segunda) ao 64 (domingo). */
+  weekdays: number;
+  enabled: boolean;
+}
+
+/** Espelha `routines::RoutineInput`. */
+export type RoutineInput = Omit<Routine, 'id'>;
+
+export const ROUTINES_CHANGED_EVENT = 'routines:changed';
+
+export function routinesList(): Promise<Routine[]> {
+  return invoke<Routine[]>('routines_list');
+}
+
+/** Rejeita com `validation` (campos `name`, `startMinute`, `durationMinutes`, `weekdays`). */
+export function routineCreate(input: RoutineInput): Promise<Routine[]> {
+  return invoke<Routine[]>('routine_create', { input });
+}
+
+export function routineUpdate(id: number, input: RoutineInput): Promise<Routine[]> {
+  return invoke<Routine[]>('routine_update', { id, input });
+}
+
+export function routineDelete(id: number): Promise<Routine[]> {
+  return invoke<Routine[]>('routine_delete', { id });
+}
+
+/** Pula a rotina em andamento (só a de hoje) e retoma o que ela interrompeu. */
+export function routineSkip(): Promise<TimerSnapshot> {
+  return invoke<TimerSnapshot>('routine_skip');
 }
 
 /** Espelha `tasks::Priority`. */
@@ -353,6 +408,21 @@ export function previewAlerts(): Promise<void> {
 /** Mostra a janela principal, opcionalmente em uma tela específica. */
 export function showMainWindow(view?: string): Promise<void> {
   return invoke('show_main_window', { view: view ?? null });
+}
+
+/** A imagem de fundo enviada pelo usuário, como `data:` URL, ou `null`. */
+export function backgroundGetCustom(): Promise<string | null> {
+  // Na pré-visualização do navegador não há onde guardá-la.
+  if (!isTauri()) return Promise.resolve(null);
+  return invoke<string | null>('background_get_custom');
+}
+
+/**
+ * Guarda a imagem de fundo do usuário (`data:` URL; PNG, JPEG ou WebP de até
+ * 12 MB) e devolve o que ficou gravado. Rejeita com `validation` (campo `image`).
+ */
+export function backgroundSetCustom(dataUrl: string): Promise<string | null> {
+  return invoke<string | null>('background_set_custom', { dataUrl });
 }
 
 export function getAppInfo(): Promise<AppInfo> {

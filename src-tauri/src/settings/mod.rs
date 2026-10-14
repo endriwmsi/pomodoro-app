@@ -28,12 +28,53 @@ pub enum Template {
     Glass,
     /// Painéis escuros, tipografia monoespaçada e elementos em matriz de pontos.
     Matrix,
+    /// Painel de telemetria: quase preto, rótulos monoespaçados e blocos verdes.
+    Signal,
+    /// Claro e em relevo (neumorfismo): superfícies macias, sem imagem de fundo.
+    Relief,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+/// Tamanho máximo do nome de uma imagem de fundo embutida.
+pub const BACKGROUND_NAME_MAX: usize = 64;
+
+/// Imagem de fundo da janela principal.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum Background {
+    /// A primeira imagem que vem com o aplicativo.
+    #[default]
+    Default,
+    /// Sem imagem: só o gradiente.
+    None,
+    /// Uma das imagens que vêm com o aplicativo (`src/assets/backgrounds/`),
+    /// pelo nome do arquivo sem a extensão. Um nome que esta versão não
+    /// conhece é tratado pela interface como `Default`.
+    Builtin { name: String },
+    /// A imagem enviada pelo usuário (ver `crate::background`).
+    Custom,
+}
+
+impl Background {
+    fn validate(&self) -> Result<(), AppError> {
+        let Self::Builtin { name } = self else {
+            return Ok(());
+        };
+        let allowed = |c: char| c.is_ascii_alphanumeric() || c == '-' || c == '_';
+        if name.is_empty() || name.len() > BACKGROUND_NAME_MAX || !name.chars().all(allowed) {
+            return Err(AppError::validation(
+                "appearance.background",
+                "Imagem de fundo desconhecida.",
+            ));
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct AppearanceSettings {
     pub template: Template,
+    pub background: Background,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -186,6 +227,40 @@ pub struct GeneralSettings {
     pub launch_at_login: bool,
 }
 
+/// Expediente: o intervalo do dia em que o usuário trabalha. Com ele ligado,
+/// os ciclos do timer são encaixados para terminar junto com o expediente e
+/// nada começa sozinho fora dele. Ver `docs/ROUTINES.md`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct WorkdaySettings {
+    pub enabled: bool,
+    /// Início e fim, em minutos desde a meia-noite (fuso local).
+    pub start_minute: u32,
+    pub end_minute: u32,
+}
+
+impl Default for WorkdaySettings {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            start_minute: 9 * 60,
+            end_minute: 18 * 60,
+        }
+    }
+}
+
+impl WorkdaySettings {
+    pub fn validate(&self) -> Result<(), AppError> {
+        if self.end_minute > 24 * 60 || self.start_minute >= self.end_minute {
+            return Err(AppError::validation(
+                "workday.endMinute",
+                "O fim do expediente precisa ser depois do início, no mesmo dia.",
+            ));
+        }
+        Ok(())
+    }
+}
+
 /// Previsão do tempo no notch. É a única funcionalidade que usa a internet;
 /// por isso começa desligada.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
@@ -213,7 +288,7 @@ impl Default for AlertSettings {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Settings {
     pub appearance: AppearanceSettings,
@@ -223,11 +298,14 @@ pub struct Settings {
     pub goals: GoalSettings,
     pub weather: WeatherSettings,
     pub general: GeneralSettings,
+    pub workday: WorkdaySettings,
 }
 
 impl Settings {
     pub fn validate(&self) -> Result<(), AppError> {
+        self.appearance.background.validate()?;
         self.timer.validate()?;
+        self.workday.validate()?;
         self.goals.validate()
     }
 }
@@ -259,6 +337,65 @@ mod tests {
         assert!(settings.alerts.sound_enabled);
         assert!(settings.alerts.notifications_enabled);
         settings.validate().unwrap();
+    }
+
+    #[test]
+    fn backgrounds_serialize_by_kind_and_builtin_names_are_checked() {
+        let builtin = Background::Builtin {
+            name: "nuvens-2".to_owned(),
+        };
+        assert_eq!(
+            serde_json::to_value(&builtin).unwrap(),
+            serde_json::json!({ "kind": "builtin", "name": "nuvens-2" })
+        );
+        assert_eq!(
+            serde_json::to_value(Background::Custom).unwrap(),
+            serde_json::json!({ "kind": "custom" })
+        );
+        builtin.validate().unwrap();
+        Background::None.validate().unwrap();
+
+        // O nome vira parte de um caminho de arquivo na interface: só letras,
+        // números, hífen e sublinhado.
+        for name in ["", "../segredo", "a b", "foto.jpg", &"x".repeat(65)] {
+            let settings = Settings {
+                appearance: AppearanceSettings {
+                    background: Background::Builtin {
+                        name: name.to_owned(),
+                    },
+                    ..AppearanceSettings::default()
+                },
+                ..Settings::default()
+            };
+            assert!(matches!(
+                settings.validate(),
+                Err(AppError::Validation {
+                    field: "appearance.background",
+                    ..
+                })
+            ));
+        }
+    }
+
+    #[test]
+    fn the_workday_must_end_after_it_starts_on_the_same_day() {
+        let workday = |start_minute, end_minute| WorkdaySettings {
+            enabled: true,
+            start_minute,
+            end_minute,
+        };
+
+        workday(540, 1080).validate().unwrap();
+        workday(0, 1440).validate().unwrap();
+        assert!(workday(540, 540).validate().is_err());
+        assert!(workday(1080, 540).validate().is_err());
+        assert!(workday(540, 1441).validate().is_err());
+        // Vale mesmo desligado: o valor gravado precisa fazer sentido ao ligar.
+        let off = WorkdaySettings {
+            enabled: false,
+            ..workday(600, 300)
+        };
+        assert!(off.validate().is_err());
     }
 
     #[test]
@@ -330,7 +467,7 @@ mod tests {
         assert_eq!(
             json,
             serde_json::json!({
-                "appearance": { "template": "glass" },
+                "appearance": { "template": "glass", "background": { "kind": "default" } },
                 "timer": {
                     "focusMinutes": 25,
                     "shortBreakMinutes": 5,
@@ -343,7 +480,8 @@ mod tests {
                 "alerts": { "soundEnabled": true, "notificationsEnabled": true },
                 "goals": { "dailyPomodoros": null },
                 "weather": { "enabled": false, "useLocation": false },
-                "general": { "launchAtLogin": false }
+                "general": { "launchAtLogin": false },
+                "workday": { "enabled": false, "startMinute": 540, "endMinute": 1080 }
             })
         );
     }
