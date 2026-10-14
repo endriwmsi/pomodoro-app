@@ -73,7 +73,7 @@ Save-Canvas $c 'header.bmp'
 # --- Página "Conheça o Compasso": dashboard e notch --------------------------
 $c = New-Canvas 675 236 $night
 $dashboard = [System.Drawing.Image]::FromFile((Join-Path $images 'dashboard.png'))
-$notch = [System.Drawing.Image]::FromFile((Join-Path $images 'notch-clima.png'))
+$notch = [System.Drawing.Image]::FromFile((Join-Path $images 'notch-timer.png'))
 # O dashboard ocupa a altura toda, à esquerda; o notch, à direita, com legenda.
 $dashWidth = [int](236 * $dashboard.Width / $dashboard.Height)
 $c.Graphics.DrawImage($dashboard, 0, 0, $dashWidth, 236)
