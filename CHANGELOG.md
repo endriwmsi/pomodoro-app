@@ -168,6 +168,12 @@ Mudanças relevantes para usuários e desenvolvedores. Formato inspirado em
 - `tauri.conf.json`: ícone `.icns` e `macOSPrivateApi`, para o pacote do macOS e a janela
   transparente do notch nele.
 
+### Corrigido
+
+- Campos de horário do expediente (tela Rotina): digitar "17" no fim do expediente era recusado
+  porque cada tecla gravava na hora ("1" virava 01:00, antes do início). Agora o horário é
+  gravado ao sair do campo ou com Enter; um horário incompleto volta ao valor gravado.
+
 - **Notch mais largo no topo** (628 × 216): o player compacto passou a ocupar 160 px, com capa
   maior e os tempos da faixa. Na aba Timer os controles ficam junto do relógio, e na aba
   Tarefas as linhas são maiores e centralizadas na altura.

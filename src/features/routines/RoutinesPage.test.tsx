@@ -209,11 +209,33 @@ describe('RoutinesPage', () => {
       expect.objectContaining({ workday: { enabled: true, startMinute: 540, endMinute: 1080 } }),
     );
 
-    fireEvent.change(screen.getByLabelText('às'), { target: { value: '17:30' } });
+    const end = screen.getByLabelText('às');
+    // Digitando "17:30": horários intermediários (01:30, 07:30...) não são gravados.
+    fireEvent.change(end, { target: { value: '01:30' } });
+    fireEvent.change(end, { target: { value: '17:30' } });
     await flush();
+    expect(commands.updateSettings).toHaveBeenCalledTimes(1);
+
+    fireEvent.blur(end);
+    await flush();
+    expect(commands.updateSettings).toHaveBeenCalledTimes(2);
     expect(commands.updateSettings).toHaveBeenLastCalledWith(
       expect.objectContaining({ workday: { enabled: true, startMinute: 540, endMinute: 1050 } }),
     );
+  });
+
+  it('descarta o horário incompleto ao sair do campo', async () => {
+    render(<RoutinesPage />);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Tenho um horário de expediente' }));
+    await flush();
+
+    const start = screen.getByLabelText('Das');
+    fireEvent.change(start, { target: { value: '' } });
+    fireEvent.blur(start);
+    await flush();
+
+    expect(commands.updateSettings).toHaveBeenCalledTimes(1);
+    expect(start).toHaveValue('09:00');
   });
 
   it('mostra o motivo quando o expediente é recusado', async () => {

@@ -25,6 +25,56 @@ const ICON_BUTTON =
 const TIME_FIELD =
   'rounded-lg border border-panel-border bg-panel-strong px-2.5 py-1.5 text-sm text-ink scheme-dark outline-none focus-visible:ring-2 focus-visible:ring-white/70 disabled:opacity-50';
 
+/**
+ * Campo de horário que só grava ao concluir a edição (sair do campo ou Enter). Gravar a cada
+ * tecla recusaria horários intermediários: ao digitar "17", o "1" já forma 01:00 e o fim
+ * ficaria antes do início.
+ */
+function WorkdayTimeField({
+  id,
+  minute,
+  disabled,
+  onCommit,
+}: {
+  id: string;
+  minute: number;
+  disabled: boolean;
+  onCommit: (minute: number) => void;
+}) {
+  const stored = formatMinute(minute);
+  const [draft, setDraft] = useState(stored);
+  const [seen, setSeen] = useState(stored);
+  // Valor gravado mudou por fora (recusa, outra janela): o rascunho acompanha.
+  if (seen !== stored) {
+    setSeen(stored);
+    setDraft(stored);
+  }
+
+  const commit = () => {
+    const parsed = parseTime(draft);
+    // Campo incompleto ou vazio: volta ao valor gravado.
+    if (parsed === null) setDraft(stored);
+    else if (parsed !== minute) onCommit(parsed);
+  };
+
+  return (
+    <input
+      id={id}
+      type="time"
+      value={draft}
+      disabled={disabled}
+      onChange={(event) => {
+        setDraft(event.target.value);
+      }}
+      onBlur={commit}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') commit();
+      }}
+      className={TIME_FIELD}
+    />
+  );
+}
+
 /** Horário de expediente: o timer encaixa os ciclos para terminar junto com ele. */
 function WorkdaySection() {
   const settings = useSettingsStore((state) => state.settings);
@@ -37,11 +87,6 @@ function WorkdaySection() {
     void save({ ...settings, workday: { ...workday, ...change } }).then((failure) => {
       if (failure) setError(failure.message);
     });
-  };
-  const setTime = (key: 'startMinute' | 'endMinute', text: string) => {
-    const minute = parseTime(text);
-    // Campo incompleto enquanto o usuário digita: espera um horário inteiro.
-    if (minute !== null) update({ [key]: minute });
   };
 
   return (
@@ -59,26 +104,22 @@ function WorkdaySection() {
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
         <label htmlFor="workday-start">Das</label>
-        <input
+        <WorkdayTimeField
           id="workday-start"
-          type="time"
-          value={formatMinute(workday.startMinute)}
+          minute={workday.startMinute}
           disabled={!workday.enabled}
-          onChange={(event) => {
-            setTime('startMinute', event.target.value);
+          onCommit={(startMinute) => {
+            update({ startMinute });
           }}
-          className={TIME_FIELD}
         />
         <label htmlFor="workday-end">às</label>
-        <input
+        <WorkdayTimeField
           id="workday-end"
-          type="time"
-          value={formatMinute(workday.endMinute)}
+          minute={workday.endMinute}
           disabled={!workday.enabled}
-          onChange={(event) => {
-            setTime('endMinute', event.target.value);
+          onCommit={(endMinute) => {
+            update({ endMinute });
           }}
-          className={TIME_FIELD}
         />
       </div>
       <p className="mt-2 text-xs text-ink-muted">

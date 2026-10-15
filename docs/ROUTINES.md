@@ -155,7 +155,9 @@ Erros: `validation` com o campo (`name`, `startMinute`, `durationMinutes`, `week
 ## Interface
 
 - **Tela Rotina** (`RoutinesPage`): expediente, uma faixa do dia com o expediente, as rotinas de
-  hoje e a hora atual, e a lista de rotinas com criar, editar, ligar/desligar e excluir.
+  hoje e a hora atual, e a lista de rotinas com criar, editar, ligar/desligar e excluir. Os
+  campos de horário do expediente mantêm um rascunho local e só gravam ao sair do campo ou com
+  Enter (gravar a cada tecla recusaria horários intermediários, como 01:00 ao digitar "17").
 - **Pomodoro e notch:** durante uma rotina, o relógio mostra quanto falta para ela acabar, com o
   nome dela e "Pular a rotina"; fora dela, a próxima rotina de hoje e o rótulo "Foco curto"
   quando a sessão foi encurtada.
