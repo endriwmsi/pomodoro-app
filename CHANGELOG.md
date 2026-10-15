@@ -5,6 +5,11 @@ Mudanças relevantes para usuários e desenvolvedores. Formato inspirado em
 
 ## [Não lançado]
 
+## [0.2.0] — 2026-10-15
+
+Primeira versão numerada desde a 0.1.0, que só existiu como instalador local, sem publicação
+nem seção própria. Por isso, o que veio nela também está listado aqui.
+
 ### Adicionado
 
 - Scaffold do aplicativo: Tauri 2 + Rust no backend, React 19 + TypeScript estrito + Vite +
