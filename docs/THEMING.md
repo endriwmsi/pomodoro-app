@@ -130,8 +130,8 @@ nome da prioridade.
 ## Componentes shadcn/ui
 
 Controles de formulário mais complexos vêm do [shadcn/ui](https://ui.shadcn.com) (Radix UI):
-hoje, `components/ui/checkbox.tsx`, `components/ui/select.tsx` e `components/ui/dialog.tsx`
-(Dialog e AlertDialog). O código é o do shadcn, com
+hoje, `components/ui/checkbox.tsx`, `components/ui/select.tsx`, `components/ui/popover.tsx` e
+`components/ui/dialog.tsx` (Dialog e AlertDialog). O código é o do shadcn, com
 duas adaptações:
 
 - as classes de cor do shadcn (`border-input`, `bg-primary`, `bg-popover`…) foram trocadas
@@ -144,6 +144,14 @@ Não há `components.json`: como as cores são diferentes das do shadcn, `npx sh
 componentes que precisariam da mesma adaptação manual. Para trazer outro componente, copie o
 código do shadcn e troque as classes de cor. Os arquivos mantêm o nome em minúsculas do shadcn;
 `CheckboxField.tsx` é o invólucro com rótulo usado nas Configurações.
+
+O shadcn não tem seletor de cor; `components/ui/ColorPicker.tsx` é próprio, no mesmo estilo:
+um botão com a amostra e o código da cor abre um `Popover` com a área de saturação × brilho
+(arrastável e pelas setas do teclado), a faixa de matiz (`Slider` do Radix), o campo
+hexadecimal e cores prontas (`COLOR_SWATCHES`). Grava sempre `#rrggbb`; as conversões ficam em
+`src/lib/color.ts`. As únicas cores fixas são as do espectro (`.color-picker-area` e
+`.color-picker-hue` em `globals.css`). O seletor nativo do navegador foi trocado por ele para a
+cor ficar visível no botão e seguir o template.
 
 Dependências: `radix-ui`, `clsx` e `tailwind-merge` (função `cn` em `src/lib/utils.ts`).
 
@@ -175,3 +183,6 @@ Nenhuma migration é necessária. Um banco gravado com um template que o execut�
 - No notch, o template muda apenas o desenho do tempo e a cor de destaque. O fundo não depende
   do template: é preto, ou branco se o usuário escolher (`notch.theme`, ver
   [WINDOW_MANAGER.md](WINDOW_MANAGER.md#cor)). Ele acompanha a troca de template pelo evento `settings:changed`.
+  A borda animada do notch (`notch.border`) também não depende do template: as cores do estilo
+  colorido são fixas (`.notch-border` em `globals.css`) e a do estilo de uma cor é a escolhida
+  pelo usuário ([WINDOW_MANAGER.md](WINDOW_MANAGER.md#borda-animada)).

@@ -25,7 +25,12 @@ vi.mock('@/lib/events', () => ({
 const STORED: Settings = {
   appearance: { template: 'matrix', background: { kind: 'none' } },
   timer: { ...DEFAULT_TIMER_SETTINGS, focusMinutes: 50 },
-  notch: { enabled: false, position: 'left', theme: 'light' },
+  notch: {
+    enabled: false,
+    position: 'left',
+    theme: 'light',
+    border: { enabled: true, style: 'solid', color: '#22c55e' },
+  },
   alerts: { soundEnabled: false, notificationsEnabled: true },
   goals: { dailyPomodoros: 8 },
   weather: { enabled: true, useLocation: false },

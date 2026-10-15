@@ -330,12 +330,136 @@ input[type='number']::-webkit-outer-spin-button {
     height 180ms ease-out;
 }
 
+/*
+ * Borda animada do notch recolhido (notch.border, ver docs/WINDOW_MANAGER.md).
+ * O elemento cobre abas e corpo. Uma camada, da cor do notch, fecha a lasca
+ * entre aba e canto (borderFillPath em src/notch/shape.ts); a outra é recortada
+ * (borderGlowPath) na faixa que segue o contorno, e por baixo dela uma faixa de
+ * cores desliza. Só `transform` é animado, então o movimento roda no
+ * compositor sem repintar; com o notch aberto a animação fica parada.
+ */
+.notch-border {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition: opacity 150ms ease-out;
+}
+
+.notch-border-fill,
+.notch-border-glow {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.notch-border-fill {
+  background-color: var(--notch-surface);
+}
+
+/* Ao recolher, só reaparece depois que a forma terminou de encolher (180 ms). */
+.notch-border:not([data-paused]) {
+  transition-delay: 180ms;
+}
+
+/* A faixa mede o dobro do notch e se repete a cada metade: andar 50% fecha o ciclo. */
+.notch-border-flow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--notch-border-a) 0,
+    var(--notch-border-b) 12.5%,
+    var(--notch-border-c) 25%,
+    var(--notch-border-d) 37.5%,
+    var(--notch-border-a) 50%
+  );
+  animation: notch-border-flow-x 3.2s linear infinite;
+}
+
+/* Nas laterais, a faixa corre na vertical. */
+.notch-border:not([data-edge='top']) .notch-border-flow {
+  width: 100%;
+  height: 200%;
+  background: repeating-linear-gradient(
+    180deg,
+    var(--notch-border-a) 0,
+    var(--notch-border-b) 12.5%,
+    var(--notch-border-c) 25%,
+    var(--notch-border-d) 37.5%,
+    var(--notch-border-a) 50%
+  );
+  animation-name: notch-border-flow-y;
+}
+
+.notch-border[data-paused] .notch-border-flow {
+  animation-play-state: paused;
+}
+
+.notch-border[data-notch-border='rainbow'] {
+  --notch-border-a: #ff4d6d;
+  --notch-border-b: #ffb703;
+  --notch-border-c: #3ddc97;
+  --notch-border-d: #4cc9f0;
+}
+
+/* Uma cor só: brilhos da cor escolhida percorrem a linha. */
+.notch-border[data-notch-border='solid'] {
+  --notch-border-a: var(--notch-border-color);
+  --notch-border-b: color-mix(in srgb, var(--notch-border-color) 35%, transparent);
+  --notch-border-c: var(--notch-border-color);
+  --notch-border-d: color-mix(in srgb, var(--notch-border-color) 35%, transparent);
+}
+
+@keyframes notch-border-flow-x {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes notch-border-flow-y {
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+/*
+ * Seletor de cor (components/ui/ColorPicker.tsx). A área recebe o matiz puro
+ * como fundo; por cima, branco → transparente (saturação) e transparente →
+ * preto (brilho). Estas são as únicas cores fixas do seletor: o espectro.
+ */
+.color-picker-area {
+  background:
+    linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent);
+}
+
+.color-picker-hue {
+  background: linear-gradient(
+    to right,
+    #f00 0%,
+    #ff0 16.67%,
+    #0f0 33.33%,
+    #0ff 50%,
+    #00f 66.67%,
+    #f0f 83.33%,
+    #f00 100%
+  );
+}
+
 /* Plano de fundo usado enquanto nenhuma imagem é fornecida em src/assets/. */
 .app-background-fallback {
   background: linear-gradient(180deg, #7fa3ae 0%, #9db7b8 38%, #c9c6a8 72%, #d9c08d 100%);
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* Parada, em vez de girar em 0,01 ms por volta (regra abaixo). */
+  .notch-border-flow {
+    animation: none;
+  }
+
   *,
   *::before,
   *::after {

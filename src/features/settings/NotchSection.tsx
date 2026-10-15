@@ -1,6 +1,7 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
 import { CheckboxField } from '@/components/ui/CheckboxField';
+import { ColorPicker } from '@/components/ui/ColorPicker';
 import { Panel } from '@/components/ui/Panel';
 import { PanelLabel } from '@/components/ui/PanelLabel';
 import {
@@ -10,7 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { NotchPosition, NotchTheme, Settings } from '@/lib/commands';
+import type {
+  NotchBorder,
+  NotchBorderStyle,
+  NotchPosition,
+  NotchTheme,
+  Settings,
+} from '@/lib/commands';
 import { useSettingsStore } from '@/stores/settings';
 
 const POSITIONS: readonly { value: NotchPosition; label: string }[] = [
@@ -24,6 +31,18 @@ const THEMES: readonly { value: NotchTheme; label: string }[] = [
   { value: 'light', label: 'Branco' },
   { value: 'system', label: 'Seguir o sistema' },
 ];
+
+/** O seletor de cor dispara a cada movimento: só salva quando o usuário para. */
+const COLOR_SAVE_DELAY_MS = 300;
+
+const BORDER_STYLES: readonly { value: NotchBorderStyle; label: string }[] = [
+  { value: 'rainbow', label: 'Colorida' },
+  { value: 'solid', label: 'Uma cor' },
+];
+
+function isBorderStyle(value: string): value is NotchBorderStyle {
+  return BORDER_STYLES.some((style) => style.value === value);
+}
 
 function isTheme(value: string): value is NotchTheme {
   return THEMES.some((theme) => theme.value === value);
@@ -39,12 +58,41 @@ export function NotchSection() {
   const [error, setError] = useState<string | null>(null);
   const positionId = useId();
   const themeId = useId();
+  const borderStyleId = useId();
+  const borderColorId = useId();
 
   const update = (notch: Partial<Settings['notch']>) => {
     setError(null);
     void save({ ...settings, notch: { ...settings.notch, ...notch } }).then((failure) => {
       if (failure) setError(`Não foi possível salvar: ${failure.message}`);
     });
+  };
+
+  const border = settings.notch.border;
+  const updateBorder = (next: Partial<NotchBorder>) => {
+    update({ border: { ...border, ...next } });
+  };
+
+  // Cor exibida no seletor enquanto o salvamento espera.
+  const [draftColor, setDraftColor] = useState<string | null>(null);
+  const colorTimer = useRef<number | undefined>(undefined);
+  const flushColor = useRef<(() => void) | null>(null);
+  useEffect(
+    () => () => {
+      window.clearTimeout(colorTimer.current);
+      flushColor.current?.();
+    },
+    [],
+  );
+  const changeColor = (color: string) => {
+    setDraftColor(color);
+    window.clearTimeout(colorTimer.current);
+    flushColor.current = () => {
+      flushColor.current = null;
+      setDraftColor(null);
+      updateBorder({ color });
+    };
+    colorTimer.current = window.setTimeout(() => flushColor.current?.(), COLOR_SAVE_DELAY_MS);
   };
 
   return (
@@ -115,6 +163,55 @@ export function NotchSection() {
       <p className="mt-2 text-xs text-ink-muted">
         A cor do notch não depende do template. Em "Seguir o sistema", ele fica branco no modo claro
         do Windows e preto no escuro.
+      </p>
+
+      <div className="mt-4">
+        <CheckboxField
+          checked={border.enabled}
+          disabled={!settings.notch.enabled}
+          onChange={(enabled) => {
+            updateBorder({ enabled });
+          }}
+        >
+          Borda animada no notch recolhido
+        </CheckboxField>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <label htmlFor={borderStyleId} className="text-sm">
+          Cores da borda
+        </label>
+        <Select
+          value={border.style}
+          disabled={!settings.notch.enabled || !border.enabled}
+          onValueChange={(value) => {
+            if (isBorderStyle(value)) updateBorder({ style: value });
+          }}
+        >
+          <SelectTrigger id={borderStyleId}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {BORDER_STYLES.map((style) => (
+              <SelectItem key={style.value} value={style.value}>
+                {style.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {border.style === 'solid' ? (
+          <ColorPicker
+            id={borderColorId}
+            aria-label="Cor da borda"
+            value={draftColor ?? border.color}
+            disabled={!settings.notch.enabled || !border.enabled}
+            onChange={changeColor}
+          />
+        ) : null}
+      </div>
+      <p className="mt-2 text-xs text-ink-muted">
+        Uma linha de cor que percorre a borda do notch fechado, para ele chamar mais atenção. Some
+        quando o notch abre.
       </p>
 
       {error ? (

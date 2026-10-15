@@ -39,10 +39,21 @@ export type NotchPosition = 'top' | 'left' | 'right';
 /** Espelha `settings::NotchTheme`: cor do notch; `system` acompanha o Windows. */
 export type NotchTheme = 'dark' | 'light' | 'system';
 
+/** Espelha `settings::NotchBorderStyle`: várias cores ou só a escolhida. */
+export type NotchBorderStyle = 'rainbow' | 'solid';
+
+/** Espelha `settings::NotchBorder`: borda animada do notch recolhido. */
+export interface NotchBorder {
+  enabled: boolean;
+  style: NotchBorderStyle;
+  /** Cor do estilo `solid`, em `#rrggbb`. */
+  color: string;
+}
+
 export interface Settings {
   appearance: { template: TemplateId; background: BackgroundChoice };
   timer: TimerSettings;
-  notch: { enabled: boolean; position: NotchPosition; theme: NotchTheme };
+  notch: { enabled: boolean; position: NotchPosition; theme: NotchTheme; border: NotchBorder };
   alerts: { soundEnabled: boolean; notificationsEnabled: boolean };
   /** `dailyPomodoros`: meta de pomodoros por dia, ou `null` para nenhuma. */
   goals: { dailyPomodoros: number | null };

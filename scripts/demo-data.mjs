@@ -89,7 +89,12 @@ const settings = {
     autoStartBreaks: true,
     autoStartFocus: false,
   },
-  notch: { enabled: true, position: 'top', theme: 'dark' },
+  notch: {
+    enabled: true,
+    position: 'top',
+    theme: 'dark',
+    border: { enabled: false, style: 'rainbow', color: '#f59e0b' },
+  },
   alerts: { soundEnabled: false, notificationsEnabled: false },
   goals: { dailyPomodoros: 8 },
   // Capitais, não a localização: as capturas não revelam onde foram feitas.

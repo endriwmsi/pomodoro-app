@@ -5,8 +5,8 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use super::{
-    AlertSettings, AppearanceSettings, GeneralSettings, GoalSettings, NotchSettings, Settings,
-    TimerSettings, WeatherSettings, WorkdaySettings,
+    AlertSettings, AppearanceSettings, GeneralSettings, GoalSettings, NotchBorder, NotchSettings,
+    Settings, TimerSettings, WeatherSettings, WorkdaySettings,
 };
 use crate::error::AppError;
 
@@ -29,7 +29,11 @@ pub fn load(conn: &Connection) -> Result<Settings, AppError> {
         eprintln!("configurações do timer inválidas no banco; usando o padrão ({error})");
         timer = TimerSettings::default();
     }
-    let notch: NotchSettings = load_section(conn, KEY_NOTCH)?;
+    let mut notch: NotchSettings = load_section(conn, KEY_NOTCH)?;
+    if let Err(error) = notch.border.validate() {
+        eprintln!("borda do notch inválida no banco; usando o padrão ({error})");
+        notch.border = NotchBorder::default();
+    }
     let alerts: AlertSettings = load_section(conn, KEY_ALERTS)?;
     let mut goals: GoalSettings = load_section(conn, KEY_GOALS)?;
     if let Err(error) = goals.validate() {
@@ -124,6 +128,11 @@ mod tests {
                 enabled: false,
                 position: crate::settings::NotchPosition::Right,
                 theme: crate::settings::NotchTheme::Light,
+                border: NotchBorder {
+                    enabled: true,
+                    style: crate::settings::NotchBorderStyle::Solid,
+                    color: "#22c55e".to_owned(),
+                },
             },
             alerts: AlertSettings {
                 sound_enabled: false,
@@ -278,5 +287,44 @@ mod tests {
                 ..TimerSettings::default()
             }
         );
+    }
+
+    #[test]
+    fn notch_settings_from_an_older_version_get_the_border_turned_off() {
+        let db = Database::open_in_memory().unwrap();
+        db.with_conn(|conn| {
+            conn.execute(
+                "INSERT INTO settings (key, value)
+                 VALUES ('notch', '{\"enabled\": true, \"position\": \"left\", \"theme\": \"dark\"}')",
+                [],
+            )?;
+            Ok(())
+        })
+        .unwrap();
+
+        let loaded = db.with_conn(|conn| load(conn)).unwrap();
+
+        assert_eq!(loaded.notch.position, crate::settings::NotchPosition::Left);
+        assert_eq!(loaded.notch.border, NotchBorder::default());
+        assert!(!loaded.notch.border.enabled);
+    }
+
+    #[test]
+    fn an_invalid_border_color_in_the_database_resets_only_the_border() {
+        let db = Database::open_in_memory().unwrap();
+        db.with_conn(|conn| {
+            conn.execute(
+                "INSERT INTO settings (key, value) VALUES ('notch', '{\"position\": \"right\",
+                 \"border\": {\"enabled\": true, \"style\": \"solid\", \"color\": \"red;\"}}')",
+                [],
+            )?;
+            Ok(())
+        })
+        .unwrap();
+
+        let loaded = db.with_conn(|conn| load(conn)).unwrap();
+
+        assert_eq!(loaded.notch.position, crate::settings::NotchPosition::Right);
+        assert_eq!(loaded.notch.border, NotchBorder::default());
     }
 }

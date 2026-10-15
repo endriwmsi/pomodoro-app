@@ -45,7 +45,7 @@ pub async fn update_settings(
     // O expediente pode ter mudado: o timer passa a segui-lo já.
     let routines = db.with_conn(|conn| crate::routines::store::list(conn))?;
     timer.agenda_changed(routines, saved.workday)?;
-    windows::notch::configure(&app, saved.notch)?;
+    windows::notch::configure(&app, &saved.notch)?;
     app.emit(SETTINGS_CHANGED_EVENT, &saved)?;
     Ok(saved)
 }

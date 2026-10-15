@@ -173,7 +173,7 @@ pub fn run() {
                 app.manage(NotchState::default());
 
                 tray::build(app.handle())?;
-                windows::notch::configure(app.handle(), settings.notch)?;
+                windows::notch::configure(app.handle(), &settings.notch)?;
                 // Reaplica a preferência: o registro do Windows guarda o caminho do
                 // executável, que pode ter mudado (reinstalação em outra pasta).
                 if let Err(error) =

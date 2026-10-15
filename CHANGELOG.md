@@ -147,6 +147,17 @@ Mudanças relevantes para usuários e desenvolvedores. Formato inspirado em
   com as mesmas coordenadas aproximadas — um segundo serviço de rede, só com a opção de
   localização ligada (ADR-004 revisado). Sem resposta dele: "Região de \<capital\>" a até
   100 km de uma capital, ou "Sua localização". `WeatherPlace` ganhou `detail`.
+- **Borda animada no notch recolhido** (Configurações → Notch), desligada por padrão: uma faixa
+  de cor que segue o contorno do notch fechado da ponta de uma aba à da outra, com 2 px no lado
+  comprido e afinando nos cantos até 1 px ao longo das abas, colorida ou de uma cor escolhida
+  pelo usuário. Com ela ligada, a lasca entre a aba e o canto do corpo é preenchida e a ponta
+  da aba, aparada, para o contorno ser uma curva só. Campo novo
+  `notch.border` (`enabled`, `style` `rainbow` | `solid`, `color` `#rrggbb`, validada no
+  backend); sem migration. `windows::notch::configure` passou a receber
+  `&NotchSettings`, que deixou de ser `Copy`.
+- Seletor de cor no estilo do shadcn/ui (`components/ui/ColorPicker.tsx`, sobre `Popover` e
+  `Slider` do `radix-ui`, já instalado): área de saturação e brilho, faixa de matiz, código
+  hexadecimal e cores prontas. Usado na cor da borda do notch no lugar do seletor nativo.
 
 ### Alterado
 

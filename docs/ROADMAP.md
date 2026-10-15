@@ -229,6 +229,12 @@ Decisões em [ADR-004](decisions/ADR-004-NETWORK-FEATURES.md).
 - [x] Cor do notch: preto, branco ou seguir o sistema (o vidro com desfoque foi descartado)
 - [ ] Notch branco e "seguir o sistema" no aplicativo real — vistos só na pré-visualização do
       navegador
+- [x] Borda animada opcional no notch recolhido, colorida ou de uma cor escolhida, seguindo o
+      contorno suave (abas incluídas), com 2 px no fundo e 1 px nas abas
+      ([WINDOW_MANAGER.md](WINDOW_MANAGER.md#borda-animada)) — testes automatizados,
+      pré-visualização no navegador (topo e lateral, preto e branco) e aprovada pelo usuário no
+      executável de release em 2026-10-15, junto com o seletor de cor
+- [ ] Consumo de CPU/GPU com a borda ligada — não medido
 - [ ] Nome do lugar longe das capitais (exige outro serviço ou um campo para o usuário
       digitar); capitais de outros países
 - [ ] Setas de troca de capital no aplicativo real — cobertas só por testes de componente

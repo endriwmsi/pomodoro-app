@@ -153,7 +153,7 @@ Linha única (`id = 1`) com a posição no ciclo, para sobreviver ao reinício.
 As regras de gravação e recuperação estão em [TIMER_ENGINE.md](TIMER_ENGINE.md#persistência).
 
 A tabela `settings` tem ainda as seções `notch` (`NotchSettings`):
-`{ "enabled": boolean, "position": "top" | "left" | "right", "theme": "dark" | "light" | "system" }` e `alerts` (`AlertSettings`):
+`{ "enabled": boolean, "position": "top" | "left" | "right", "theme": "dark" | "light" | "system", "border": { "enabled": boolean, "style": "rainbow" | "solid", "color": "#rrggbb" } }` e `alerts` (`AlertSettings`):
 `{ "soundEnabled": boolean, "notificationsEnabled": boolean }` e `goals` (`GoalSettings`):
 `{ "dailyPomodoros": number | null }` e `weather` (`WeatherSettings`):
 `{ "enabled": boolean, "useLocation": boolean }` e `general` (`GeneralSettings`):
@@ -186,6 +186,10 @@ Fonte de verdade: `src-tauri/src/settings/mod.rs`.
 | `timer.autoStartFocus`              | `false`               | —                                                                                        |
 | `notch.enabled`                     | `true`                | —                                                                                        |
 | `notch.position`                    | `top`                 | `top`, `left`, `right`                                                                   |
+| `notch.theme`                       | `system`              | `dark`, `light`, `system`                                                                |
+| `notch.border.enabled`              | `false`               | —                                                                                        |
+| `notch.border.style`                | `rainbow`             | `rainbow`, `solid`                                                                       |
+| `notch.border.color`                | `#f59e0b`             | `#` e seis dígitos hexadecimais (vale mesmo com a borda desligada)                       |
 | `alerts.soundEnabled`               | `true`                | —                                                                                        |
 | `alerts.notificationsEnabled`       | `true`                | —                                                                                        |
 | `goals.dailyPomodoros`              | ausente (`null`)      | 1 – 50, ou `null` para nenhuma meta                                                      |
@@ -204,7 +208,8 @@ aplicativo de abrir:
 - seção ausente → padrões;
 - campo ausente (gravado por versão anterior) → padrão daquele campo;
 - JSON com formato inesperado → padrões da seção, sem afetar as demais;
-- valores do timer fora dos limites → padrões do timer; meta fora dos limites → sem meta.
+- valores do timer fora dos limites → padrões do timer; meta fora dos limites → sem meta;
+  cor da borda do notch inválida → borda padrão (desligada), sem mexer no resto do notch.
 
 Nos três últimos casos um aviso vai para `stderr` e a linha original permanece até o próximo
 `save`.

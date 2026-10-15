@@ -6,6 +6,7 @@ import {
   getSettings,
   updateSettings,
   type AppError,
+  type NotchBorder,
   type Settings,
   type TemplateId,
   type TimerSettings,
@@ -25,6 +26,12 @@ export const DEFAULT_TIMER_SETTINGS: TimerSettings = {
   cyclesBeforeLongBreak: 4,
   autoStartBreaks: false,
   autoStartFocus: false,
+};
+
+export const DEFAULT_NOTCH_BORDER: NotchBorder = {
+  enabled: false,
+  style: 'rainbow',
+  color: '#f59e0b',
 };
 
 export const TIMER_LIMITS = {
@@ -52,7 +59,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   settings: {
     appearance: { template: readTemplateHint(), background: { kind: 'default' } },
     timer: DEFAULT_TIMER_SETTINGS,
-    notch: { enabled: true, position: 'top', theme: 'system' },
+    notch: { enabled: true, position: 'top', theme: 'system', border: DEFAULT_NOTCH_BORDER },
     alerts: { soundEnabled: true, notificationsEnabled: true },
     goals: { dailyPomodoros: null },
     weather: { enabled: false, useLocation: false },

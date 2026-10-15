@@ -130,7 +130,7 @@ janela já tem (ou ainda tem) o tamanho expandido.
 nos eventos `Moved` e `ScaleFactorChanged` da janela do notch — o Windows costuma mover janelas
 quando a resolução, a escala ou o monitor principal mudam.
 
-`configure(app, settings.notch)` aplica as configurações: grava a borda, esconde ou mostra o notch e, se a borda mudou, o recolhe (o tamanho expandido depende da borda).
+`configure(app, &settings.notch)` aplica as configurações: grava a borda, esconde ou mostra o notch e, se a borda mudou, o recolhe (o tamanho expandido depende da borda).
 
 ### Forma
 
@@ -166,6 +166,47 @@ sistema muda). `NotchApp` grava a cor em vigor em `data-notch-theme` no `<html>`
 (`globals.css`) troca `--notch-surface` e, no tema claro, inverte as cores `white` e `black`
 do Tailwind dentro da janela do notch — o conteúdo é todo escrito com `text-white/NN` e
 `bg-white/NN` e se inverte sem mudanças nos componentes. O backend só guarda a preferência.
+
+### Borda animada
+
+Opcional e desligada por padrão: **Configurações → Notch → Borda animada no notch recolhido**
+(`notch.border`). Enquanto o notch está recolhido, uma faixa de cor segue o contorno inteiro,
+da ponta de uma aba côncava (na borda da tela) à da outra, para ele chamar mais atenção. No
+lado comprido do corpo (o fundo, no topo; a face de dentro, nas laterais) ela tem 2 px
+constantes, com a borda de dentro reta; nos cantos afina suavemente até 1 px, a espessura ao
+longo das abas (`BORDER_GLOW_WIDTH`). Em `rainbow` são quatro cores fixas; em `solid`, brilhos
+da cor escolhida (`#rrggbb`, validada no backend antes de ir para o CSS).
+
+**Contorno suave.** Recolhido, a aba (raio 8) termina na vertical em (8, 8), mas o canto do
+corpo (raio 10) começa a curvar em (8, 2): entre as duas curvas sobra uma lasca transparente,
+e a ponta da aba fica pendurada ao lado do canto. Para a faixa seguir uma curva só, o contorno
+dela liga a aba ao canto pela reta tangente às duas (da aba em (6,4; 3,2), a 53,13°, até o
+canto em (10, 8); `tangentAngle` em `shape.ts`). Com a borda ligada e o notch recolhido, o
+desenho acompanha esse contorno: uma camada da cor do notch fecha a lasca (`borderFillPath`) e
+a ponta das abas que passa da reta é aparada (`flareTrim`, `clip-path: polygon()` em
+porcentagens da aba). Sem a borda, a forma é a de sempre.
+
+Versões descartadas a pedido do usuário: esmaecer a linha em direção à tela (parecia cortada);
+raio recolhido 4 para emendar aba e canto (o notch parecia fazer uma curva para dentro);
+espessura variando ao longo do fundo (a borda de dentro "embarrigava" para dentro do notch);
+faixa só no fundo, ou parando no topo do corpo sem seguir as abas (pontas sem destaque ou
+cortadas).
+
+Desenho (`NotchBorderGlow` em `NotchApp.tsx`, classes `.notch-border*` em `globals.css`): um
+elemento sobre a forma do notch com duas camadas recortadas por `clip-path: path(…)` — o
+preenchimento da lasca e a faixa. O caminho da faixa vem de `borderGlowPath`: o contorno
+suave é amostrado e cada ponto é deslocado para dentro, pela normal, na espessura daquele
+trecho. Como só aparece recolhido, os caminhos usam a forma recolhida, que é fixa; ao recolher,
+a borda só reaparece depois dos 180 ms da animação da forma. Dentro do recorte, uma faixa de
+gradiente com o dobro do comprimento do notch desliza 50 % em 3,2 s e recomeça. Só `transform`
+é animado, então o movimento roda no compositor, sem repintar nem acordar o React. Ao abrir, a
+borda some (opacidade), as abas deixam de ser aparadas e a animação fica em pausa
+(`data-paused`); com `prefers-reduced-motion`, fica parada.
+
+Custo: com a borda ligada e o notch recolhido, o WebView do notch produz quadros
+continuamente (uma animação infinita), o que ele não faz com a borda desligada. O consumo
+real disso no Windows **ainda não foi medido** (ver a linha de base em
+[TESTING.md](TESTING.md#linha-de-base-de-recursos)).
 
 Um notch de vidro com o desfoque nativo do Windows (acrílico, com a janela recortada no
 formato do notch) foi experimentado e **descartado** a pedido do usuário: o resultado visual

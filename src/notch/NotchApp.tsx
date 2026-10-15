@@ -22,6 +22,7 @@ import {
 import { applyTemplate } from '@/app/templates';
 import {
   notchSetLayout,
+  type NotchBorder,
   type NotchLayout,
   type NotchPosition,
   type NotchTheme,
@@ -30,7 +31,10 @@ import {
 import { MediaTab } from '@/notch/MediaTab';
 import { MiniPlayer } from '@/notch/MiniPlayer';
 import {
+  borderFillPath,
+  borderGlowPath,
   EDGE_LAYOUT,
+  flareTrim,
   LAYOUT_RANK,
   MINI_PLAYER_HEIGHT,
   MINI_PLAYER_WIDTH,
@@ -118,13 +122,61 @@ function openLayout(tabId: string): NotchLayout {
 }
 
 /** Aba côncava que liga o corpo do notch à borda da tela. */
-function Flare({ size, center }: { size: number; center: string }) {
+function Flare({
+  size,
+  center,
+  trim,
+}: {
+  size: number;
+  center: string;
+  trim?: string | undefined;
+}) {
   return (
     <span
       aria-hidden="true"
       className="notch-flare"
-      style={{ width: size, height: size, '--flare-center': center } as CSSProperties}
+      style={
+        { width: size, height: size, '--flare-center': center, clipPath: trim } as CSSProperties
+      }
     />
+  );
+}
+
+/**
+ * Borda animada do notch recolhido (`notch.border`): cobre abas e corpo; uma
+ * camada fecha a lasca entre aba e canto (`borderFillPath`) e a outra é a
+ * faixa (`borderGlowPath`). Some ao abrir, e a animação fica parada enquanto
+ * não aparece. As cores e o movimento estão em `globals.css`.
+ */
+function NotchBorderGlow({
+  border,
+  position,
+  open,
+}: {
+  border: NotchBorder;
+  position: NotchPosition;
+  open: boolean;
+}) {
+  return (
+    <span
+      aria-hidden="true"
+      data-notch-border={border.style}
+      data-edge={position}
+      data-paused={open || undefined}
+      style={{ '--notch-border-color': border.color } as CSSProperties}
+      className={`notch-border ${open ? 'opacity-0' : 'opacity-100'}`}
+    >
+      <span
+        className="notch-border-fill"
+        style={{ clipPath: `path('${borderFillPath(position)}')` }}
+      />
+      <span
+        className="notch-border-glow"
+        style={{ clipPath: `path('${borderGlowPath(position)}')` }}
+      >
+        <span className="notch-border-flow" />
+      </span>
+    </span>
   );
 }
 
@@ -330,6 +382,8 @@ function NotchPanel({ position }: { position: NotchPosition }) {
   const contentLayout = open ? layout : openLayout(tabId);
   const content = notchShape(position, contentLayout);
   const HandleIcon = HANDLE_ICON[position];
+  // Com a borda, o notch recolhido segue o contorno suave dela (ver flareTrim).
+  const trimFlares = settings.notch.border.enabled && layout === 'collapsed';
   const showMiniPlayer = contentLayout === 'expanded';
 
   // Nas laterais o seletor fica em pé, junto à borda da tela, e as abas
@@ -348,8 +402,12 @@ function NotchPanel({ position }: { position: NotchPosition }) {
       }}
       onWheel={onWheel}
     >
-      <div className={`flex ${edge.stack}`}>
-        <Flare size={shape.flare} center={edge.flareCenters[0]} />
+      <div className={`relative flex ${edge.stack}`}>
+        <Flare
+          size={shape.flare}
+          center={edge.flareCenters[0]}
+          trim={trimFlares ? flareTrim(position, 0) : undefined}
+        />
 
         <section
           aria-label="Compasso"
@@ -439,7 +497,15 @@ function NotchPanel({ position }: { position: NotchPosition }) {
           </div>
         </section>
 
-        <Flare size={shape.flare} center={edge.flareCenters[1]} />
+        <Flare
+          size={shape.flare}
+          center={edge.flareCenters[1]}
+          trim={trimFlares ? flareTrim(position, 1) : undefined}
+        />
+
+        {settings.notch.border.enabled ? (
+          <NotchBorderGlow border={settings.notch.border} position={position} open={open} />
+        ) : null}
       </div>
     </div>
   );

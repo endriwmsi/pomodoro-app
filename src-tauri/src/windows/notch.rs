@@ -158,7 +158,7 @@ pub fn set_layout(app: &AppHandle, layout: Layout) -> tauri::Result<()> {
 
 /// Aplica as configurações do notch: borda, e se ele aparece ou não. Trocar
 /// de borda o recolhe, pois o tamanho expandido depende da borda.
-pub fn configure(app: &AppHandle, settings: NotchSettings) -> tauri::Result<()> {
+pub fn configure(app: &AppHandle, settings: &NotchSettings) -> tauri::Result<()> {
     let Some(window) = app.get_webview_window(NOTCH) else {
         return Ok(());
     };

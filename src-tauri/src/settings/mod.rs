@@ -177,13 +177,59 @@ pub enum NotchTheme {
     System,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Cores da borda animada do notch recolhido.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum NotchBorderStyle {
+    /// Várias cores girando em volta do notch.
+    #[default]
+    Rainbow,
+    /// Só a cor escolhida pelo usuário (`NotchBorder::color`).
+    Solid,
+}
+
+/// Borda animada que destaca o notch enquanto ele está recolhido.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct NotchBorder {
+    pub enabled: bool,
+    pub style: NotchBorderStyle,
+    /// Cor do estilo `Solid`, em `#rrggbb`.
+    pub color: String,
+}
+
+impl Default for NotchBorder {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            style: NotchBorderStyle::Rainbow,
+            color: "#f59e0b".to_owned(),
+        }
+    }
+}
+
+impl NotchBorder {
+    pub fn validate(&self) -> Result<(), AppError> {
+        // A cor vai direto para o CSS do notch: só `#rrggbb`.
+        let hex = self.color.strip_prefix('#').unwrap_or_default();
+        if hex.len() != 6 || !hex.chars().all(|c| c.is_ascii_hexdigit()) {
+            return Err(AppError::validation(
+                "notch.border.color",
+                "A cor da borda deve estar no formato #rrggbb.",
+            ));
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct NotchSettings {
     /// Mostra o notch no monitor principal.
     pub enabled: bool,
     pub theme: NotchTheme,
     pub position: NotchPosition,
+    pub border: NotchBorder,
 }
 
 impl Default for NotchSettings {
@@ -192,6 +238,7 @@ impl Default for NotchSettings {
             enabled: true,
             position: NotchPosition::Top,
             theme: NotchTheme::System,
+            border: NotchBorder::default(),
         }
     }
 }
@@ -306,6 +353,7 @@ impl Settings {
         self.appearance.background.validate()?;
         self.timer.validate()?;
         self.workday.validate()?;
+        self.notch.border.validate()?;
         self.goals.validate()
     }
 }
@@ -476,7 +524,12 @@ mod tests {
                     "autoStartBreaks": false,
                     "autoStartFocus": false
                 },
-                "notch": { "enabled": true, "position": "top", "theme": "system" },
+                "notch": {
+                    "enabled": true,
+                    "position": "top",
+                    "theme": "system",
+                    "border": { "enabled": false, "style": "rainbow", "color": "#f59e0b" }
+                },
                 "alerts": { "soundEnabled": true, "notificationsEnabled": true },
                 "goals": { "dailyPomodoros": null },
                 "weather": { "enabled": false, "useLocation": false },
@@ -484,6 +537,35 @@ mod tests {
                 "workday": { "enabled": false, "startMinute": 540, "endMinute": 1080 }
             })
         );
+    }
+
+    #[test]
+    fn the_border_color_must_be_a_six_digit_hex() {
+        let with_color = |color: &str| Settings {
+            notch: NotchSettings {
+                border: NotchBorder {
+                    color: color.to_owned(),
+                    ..NotchBorder::default()
+                },
+                ..NotchSettings::default()
+            },
+            ..Settings::default()
+        };
+
+        with_color("#00ff88").validate().unwrap();
+        with_color("#A1B2C3").validate().unwrap();
+        // Vale mesmo com a borda desligada: o valor gravado precisa servir ao ligar.
+        for bad in [
+            "", "#fff", "00ff88", "#00ff8", "#00ff888", "#gg0000", "red", "#00ff88;",
+        ] {
+            assert!(matches!(
+                with_color(bad).validate(),
+                Err(AppError::Validation {
+                    field: "notch.border.color",
+                    ..
+                })
+            ));
+        }
     }
 
     #[test]

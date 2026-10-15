@@ -13,7 +13,7 @@ import type {
   WeatherReport,
 } from '@/lib/commands';
 import { NotchApp } from '@/notch/NotchApp';
-import { DEFAULT_TIMER_SETTINGS, useSettingsStore } from '@/stores/settings';
+import { DEFAULT_NOTCH_BORDER, DEFAULT_TIMER_SETTINGS, useSettingsStore } from '@/stores/settings';
 import { useMediaStore } from '@/stores/media';
 import { useRoutinesStore } from '@/stores/routines';
 import { useTasksStore } from '@/stores/tasks';
@@ -152,7 +152,7 @@ const PLAYING: MediaState = {
 const SETTINGS: Settings = {
   appearance: { template: 'glass', background: { kind: 'default' } },
   timer: DEFAULT_TIMER_SETTINGS,
-  notch: { enabled: true, position: 'top', theme: 'dark' },
+  notch: { enabled: true, position: 'top', theme: 'dark', border: DEFAULT_NOTCH_BORDER },
   alerts: { soundEnabled: true, notificationsEnabled: true },
   goals: { dailyPomodoros: null },
   weather: { enabled: false, useLocation: false },
@@ -162,7 +162,7 @@ const SETTINGS: Settings = {
 
 const SIDE_SETTINGS: Settings = {
   ...SETTINGS,
-  notch: { enabled: true, position: 'right', theme: 'dark' },
+  notch: { ...SETTINGS.notch, position: 'right' },
 };
 
 function place(name: string, temperatureC: number, detail = ''): WeatherReport['places'][number] {
@@ -727,6 +727,51 @@ describe('NotchApp', () => {
     });
     await renderNotch();
     expect(document.documentElement.dataset.notchTheme).toBe('light');
+  });
+
+  it('sem a borda animada ligada, não desenha borda nem apara as abas', async () => {
+    const hoverArea = await renderNotch();
+    expect(hoverArea.querySelector('.notch-border')).toBeNull();
+    for (const flare of hoverArea.querySelectorAll<HTMLElement>('.notch-flare')) {
+      expect(flare.style.clipPath).toBe('');
+    }
+  });
+
+  it('mostra a borda animada recolhido e a esconde, parada, ao abrir', async () => {
+    backend.getSettings.mockResolvedValue({
+      ...SETTINGS,
+      notch: {
+        ...SETTINGS.notch,
+        border: { enabled: true, style: 'solid', color: '#22c55e' },
+      },
+    });
+    const hoverArea = await renderNotch();
+    const border = hoverArea.querySelector<HTMLElement>('.notch-border');
+    if (!border) throw new Error('borda não renderizada');
+    expect(border.dataset.notchBorder).toBe('solid');
+    expect(border.dataset.edge).toBe('top');
+    expect(border.style.getPropertyValue('--notch-border-color')).toBe('#22c55e');
+    expect(border.querySelector<HTMLElement>('.notch-border-glow')?.style.clipPath).toMatch(
+      /^path\('M0\.00 0\.00 L/,
+    );
+    expect(border.querySelector<HTMLElement>('.notch-border-fill')?.style.clipPath).toMatch(
+      /^path\('M6\.40 3\.20 L10\.00 8\.00 /,
+    );
+    expect(border).toHaveClass('opacity-100');
+    expect(border.dataset.paused).toBeUndefined();
+    // Recolhido, as pontas das abas são aparadas para o contorno suave da borda.
+    const flares = [...hoverArea.querySelectorAll<HTMLElement>('.notch-flare')];
+    expect(flares.map((flare) => flare.style.clipPath)).toEqual([
+      expect.stringMatching(/^polygon\(/),
+      expect.stringMatching(/^polygon\(/),
+    ]);
+
+    fireEvent.mouseEnter(hoverArea);
+    await settle();
+
+    expect(border).toHaveClass('opacity-0');
+    expect(border.dataset.paused).toBe('true');
+    expect(flares.map((flare) => flare.style.clipPath)).toEqual(['', '']);
   });
 
   it('em "seguir o sistema", acompanha o modo claro ou escuro do Windows', async () => {
