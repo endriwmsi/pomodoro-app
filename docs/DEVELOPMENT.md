@@ -37,21 +37,22 @@ impede o `tauri build` de sobrescrevê-lo.
 
 ## Scripts
 
-| Script                 | O que faz                                                       |
-| ---------------------- | --------------------------------------------------------------- |
-| `npm run tauri dev`    | Aplicativo desktop com hot reload (sobe o Vite na porta 1420)   |
-| `npm run dev`          | Só o frontend no navegador — útil para layout; sem APIs nativas |
-| `npm run build`        | `tsc --noEmit` + build do frontend em `dist/`                   |
-| `npm run typecheck`    | TypeScript em modo estrito                                      |
-| `npm run lint`         | ESLint (typescript-eslint com regras baseadas em tipos)         |
-| `npm run format`       | Prettier (escreve)                                              |
-| `npm run format:check` | Prettier (apenas verifica)                                      |
-| `npm run test`         | Vitest, execução única                                          |
-| `npm run test:watch`   | Vitest em modo observação                                       |
-| `npm run rust:fmt`     | `cargo fmt --check`                                             |
-| `npm run rust:clippy`  | Clippy em todos os alvos, avisos tratados como erro             |
-| `npm run rust:test`    | `cargo test`                                                    |
-| `npm run check`        | Todos os itens de verificação acima, em sequência               |
+| Script                 | O que faz                                                            |
+| ---------------------- | -------------------------------------------------------------------- |
+| `npm run tauri dev`    | Aplicativo desktop com hot reload (sobe o Vite na porta 1420)        |
+| `npm run dev`          | Só o frontend no navegador — útil para layout; sem APIs nativas      |
+| `npm run build`        | `tsc --noEmit` + build do frontend em `dist/`                        |
+| `npm run typecheck`    | TypeScript em modo estrito                                           |
+| `npm run lint`         | ESLint (typescript-eslint com regras baseadas em tipos)              |
+| `npm run format`       | Prettier (escreve)                                                   |
+| `npm run format:check` | Prettier (apenas verifica)                                           |
+| `npm run test`         | Vitest, execução única                                               |
+| `npm run test:watch`   | Vitest em modo observação                                            |
+| `npm run rust:fmt`     | `cargo fmt --check`                                                  |
+| `npm run rust:clippy`  | Clippy em todos os alvos, avisos tratados como erro                  |
+| `npm run rust:test`    | `cargo test`                                                         |
+| `npm run check`        | Todos os itens de verificação acima, em sequência                    |
+| `npm run release`      | Publica uma versão com um comando (ver [RELEASING.md](RELEASING.md)) |
 
 Para corrigir a formatação do Rust: `cargo fmt --manifest-path src-tauri/Cargo.toml`.
 
@@ -71,6 +72,11 @@ Instalador NSIS (alvo configurado em `tauri.conf.json` → `bundle.targets`):
 ```bash
 npm run tauri build
 ```
+
+Com `bundle.createUpdaterArtifacts` ligado, o empacotamento também assina o pacote de
+atualização e **exige a chave**: defina `TAURI_SIGNING_PRIVATE_KEY` (conteúdo do arquivo ou
+caminho para ele — ver [RELEASING.md](RELEASING.md#configuração-única-o-secret-de-assinatura))
+antes de rodar. `--no-bundle` não precisa dela.
 
 Ver a seção [Instalador](#instalador).
 

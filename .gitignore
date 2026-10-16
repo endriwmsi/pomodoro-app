@@ -14,3 +14,6 @@ src-tauri/gen/schemas/
 .idea/
 Thumbs.db
 .DS_Store
+
+# Chaves de assinatura das atualizações (ver docs/RELEASING.md): nunca no repositório
+*.key

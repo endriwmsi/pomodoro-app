@@ -1,5 +1,6 @@
-# Gera os instaladores e publica uma Release quando uma tag de versão é
-# enviada (v0.2.0). Ver docs/RELEASING.md.
+# Gera os instaladores, assina as atualizações e publica uma Release quando uma
+# tag de versão é enviada (v0.2.0). `npm run release` cria e envia a tag.
+# Ver docs/RELEASING.md.
 name: Release
 
 on:
@@ -15,8 +16,18 @@ jobs:
   version:
     name: Conferir a versão
     runs-on: ubuntu-latest
+    outputs:
+      notes: ${{ steps.notes.outputs.notes }}
+    env:
+      SIGNING_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
     steps:
       - uses: actions/checkout@v4
+      - name: A chave de assinatura das atualizações está configurada
+        run: |
+          if [ -z "$SIGNING_KEY" ]; then
+            echo "::error::O secret TAURI_SIGNING_PRIVATE_KEY não existe. Crie-o em Settings > Secrets and variables > Actions com o conteúdo de ~/.tauri/compasso.key (ver docs/RELEASING.md)."
+            exit 1
+          fi
       - name: A tag é a versão do projeto
         run: |
           package="$(node -p "require('./package.json').version")"
@@ -27,6 +38,15 @@ jobs:
             echo "::error::A tag $GITHUB_REF_NAME não corresponde à versão do projeto. Rode 'npm run release:version -- $tag' e crie a tag de novo."
             exit 1
           fi
+      # O texto da Release (e o que o atualizador mostra) vem do CHANGELOG.
+      - name: Notas da versão
+        id: notes
+        run: |
+          {
+            echo 'notes<<NOTES_EOF'
+            node scripts/changelog.mjs notes "${GITHUB_REF_NAME#v}"
+            echo 'NOTES_EOF'
+          } >> "$GITHUB_OUTPUT"
 
   build:
     name: ${{ matrix.name }}
@@ -72,11 +92,19 @@ jobs:
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Assina os pacotes de atualização (`createUpdaterArtifacts`); a chave
+          # pública correspondente está em `tauri.conf.json`.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: Compasso ${{ github.ref_name }}
           releaseBody: |
-            Veja o que mudou no [CHANGELOG](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CHANGELOG.md).
+            ${{ needs.version.outputs.notes }}
+
+            ---
+
+            Histórico completo no [CHANGELOG](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CHANGELOG.md). Instalações com a atualização automática ligada recebem esta versão ao abrir o aplicativo.
 
             **Windows** é a plataforma principal. As versões para **Linux** e **macOS** são experimentais: compilam e passam nos testes, mas a aba de música, o volume por aplicativo, a localização do clima e o som de aviso só existem no Windows, e o notch não foi verificado nesses sistemas.
 
