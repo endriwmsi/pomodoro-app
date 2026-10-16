@@ -57,12 +57,14 @@ export interface Settings {
   alerts: { soundEnabled: boolean; notificationsEnabled: boolean };
   /** `dailyPomodoros`: meta de pomodoros por dia, ou `null` para nenhuma. */
   goals: { dailyPomodoros: number | null };
-  /** Previsão do tempo no notch: a única função que usa a internet. */
+  /** Previsão do tempo no notch: usa a internet; desligada por padrão. */
   weather: { enabled: boolean; useLocation: boolean };
   /** `launchAtLogin`: abrir o Compasso ao entrar no Windows. */
   general: { launchAtLogin: boolean };
   /** Expediente: início e fim em minutos desde a meia-noite, no fuso local. */
   workday: { enabled: boolean; startMinute: number; endMinute: number };
+  /** `autoUpdate`: consultar a Release ao abrir e instalar a versão nova. Usa a internet. */
+  updates: { autoUpdate: boolean };
 }
 
 export const SETTINGS_CHANGED_EVENT = 'settings:changed';
@@ -434,6 +436,32 @@ export function backgroundGetCustom(): Promise<string | null> {
  */
 export function backgroundSetCustom(dataUrl: string): Promise<string | null> {
   return invoke<string | null>('background_set_custom', { dataUrl });
+}
+
+/** Espelha `updater::UpdateInfo`: uma versão mais nova que a instalada. */
+export interface UpdateInfo {
+  version: string;
+  /** Texto da Release, se houver. */
+  notes: string | null;
+}
+
+/** A atualização já encontrada nesta execução, sem consultar a rede. */
+export function updatePending(): Promise<UpdateInfo | null> {
+  return invoke<UpdateInfo | null>('update_pending');
+}
+
+/** Consulta a Release mais recente; `null` quando esta já é a mais nova. Rejeita com `network`. */
+export function updateCheck(): Promise<UpdateInfo | null> {
+  return invoke<UpdateInfo | null>('update_check');
+}
+
+/**
+ * Baixa e instala a atualização encontrada; o aplicativo reinicia sozinho (a
+ * promessa só resolve se algo falhar antes). Rejeita com `validation` se o
+ * timer estiver em andamento.
+ */
+export function updateInstall(): Promise<void> {
+  return invoke('update_install');
 }
 
 export function getAppInfo(): Promise<AppInfo> {

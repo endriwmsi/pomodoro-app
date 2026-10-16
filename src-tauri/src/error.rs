@@ -23,7 +23,8 @@ pub enum AppError {
     /// O item referido não existe (mais) — por exemplo, uma tarefa excluída
     /// em outra janela.
     NotFound { message: String },
-    /// Falha ao acessar a internet (só a previsão do tempo usa a rede).
+    /// Falha ao acessar a internet (só a previsão do tempo e a atualização do
+    /// aplicativo usam a rede).
     Network { message: String },
     /// Falha do próprio aplicativo (janelas, eventos) sem relação com os dados.
     Internal { message: String },

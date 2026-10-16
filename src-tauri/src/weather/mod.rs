@@ -1,7 +1,7 @@
 //! Previsão do tempo para a aba de clima do notch.
 //!
-//! É a única funcionalidade do aplicativo que usa a internet. Fica desligada
-//! por padrão e nada aqui é chamado sem `weather.enabled`. Ver
+//! Usa a internet (junto com `updater/`) e por isso fica desligada por padrão:
+//! nada aqui é chamado sem `weather.enabled`. Ver
 //! `docs/WEATHER.md` e `docs/decisions/ADR-004-NETWORK-FEATURES.md`.
 
 pub mod location;

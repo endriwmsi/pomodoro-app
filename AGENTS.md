@@ -8,9 +8,10 @@ repositório. Leia este arquivo no início de cada sessão.
 **Compasso** é um aplicativo desktop, local e offline, feito e verificado no Windows (as
 versões para Linux e macOS são experimentais — ver `docs/RELEASING.md`), que combina Pomodoro
 configurável, Kanban, dashboard de produtividade e um notch retrátil na borda superior do
-monitor principal. Não há conta nem servidor, e tudo funciona sem internet — com uma única
-exceção opcional e desligada por padrão: a previsão do tempo do notch (ver
-`docs/decisions/ADR-004-NETWORK-FEATURES.md`).
+monitor principal. Não há conta nem servidor, e tudo funciona sem internet — com duas
+exceções, ambas opcionais: a previsão do tempo do notch (desligada por padrão) e a atualização
+automática do aplicativo (ligada por padrão, com opção para desligar). Ver
+`docs/decisions/ADR-004-NETWORK-FEATURES.md`.
 
 Prioridade de toda decisão técnica, nesta ordem:
 
@@ -37,6 +38,7 @@ Cada assunto tem uma única fonte de verdade. Não duplique conteúdo; referenci
 | Rotinas e expediente: âncoras e encaixe do timer   | [docs/ROUTINES.md](docs/ROUTINES.md)               |
 | Aba de clima: provedor, dados enviados, frequência | [docs/WEATHER.md](docs/WEATHER.md)                 |
 | Aba de música: sessão de mídia e volume            | [docs/MEDIA.md](docs/MEDIA.md)                     |
+| Atualização automática do aplicativo               | [docs/UPDATER.md](docs/UPDATER.md)                 |
 | Som e notificações                                 | [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md)     |
 | Templates de estilização                           | [docs/THEMING.md](docs/THEMING.md)                 |
 | Estratégia e comandos de teste                     | [docs/TESTING.md](docs/TESTING.md)                 |
@@ -64,8 +66,9 @@ Um módulo novo ganha seu documento junto com o código. Não crie documentos va
   (`src-tauri/capabilities/`). Cada permissão nova precisa de um consumidor real.
 - Nada de Electron, Docker, servidor HTTP local, autenticação ou serviços externos sem
   necessidade aprovada e registrada em um ADR.
-- **Rede:** só `src-tauri/src/weather/` faz requisições, e apenas com `weather.enabled`. Uma
-  nova função de rede exige revisar o ADR-004. O WebView nunca acessa a rede (a CSP não tem
+- **Rede:** só `src-tauri/src/weather/` (com `weather.enabled`) e `src-tauri/src/updater/`
+  (com `updates.autoUpdate`, ou ao clicar em "Verificar agora") fazem requisições. Uma nova
+  função de rede exige revisar o ADR-004. O WebView nunca acessa a rede (a CSP não tem
   destinos externos).
 - **`unsafe`:** só para chamar APIs do Windows, em blocos mínimos e com comentário `SAFETY`.
 - Dependência nova só após avaliar necessidade, tamanho, manutenção e compatibilidade; registre

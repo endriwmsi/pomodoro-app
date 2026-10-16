@@ -20,15 +20,17 @@ Processo único (compasso.exe)
 │   ├── background.rs            imagem de fundo enviada pelo usuário
 │   ├── analytics/               estatísticas do dashboard
 │   ├── media/                   mídia em reprodução no sistema (aba de música)
-│   └── weather/                 previsão do tempo — a única parte que usa a rede
+│   ├── updater/                 atualização automática (Release do GitHub)
+│   └── weather/                 previsão do tempo
 │
 ├── WebView2 — src/              interface React; exibe estado e envia intenções
 │
 └── SQLite                       %APPDATA%\com.endriwmsi.compasso\compasso.db
 ```
 
-Não há servidor HTTP nem processo auxiliar. O único acesso à rede é a previsão do tempo,
-opcional e desligada por padrão ([ADR-004](decisions/ADR-004-NETWORK-FEATURES.md)).
+Não há servidor HTTP nem processo auxiliar. Os únicos acessos à rede são a previsão do tempo
+(opcional, desligada por padrão) e a verificação de atualizações
+([ADR-004](decisions/ADR-004-NETWORK-FEATURES.md)); ambos partem do backend Rust.
 
 ## Limites de responsabilidade
 
@@ -76,6 +78,10 @@ Comandos de estatísticas (`commands/analytics.rs`): `analytics_dashboard`, usad
 Comandos das abas do notch (`commands/notch.rs`): `weather_get` ([WEATHER.md](WEATHER.md)) e
 `media_get_state`, `media_control`, `media_get_artwork`, `media_set_volume`, `media_seek`
 ([MEDIA.md](MEDIA.md)). Rodam em thread de trabalho, pois bloqueiam.
+
+Comandos de atualização (`commands/updater.rs`): `update_pending`, `update_check` e
+`update_install`, usados por `features/settings/UpdatesSection.tsx`. Contrato e regras em
+[UPDATER.md](UPDATER.md).
 
 Comandos de janela (`commands/window.rs`), descritos em
 [WINDOW_MANAGER.md](WINDOW_MANAGER.md):
@@ -129,6 +135,7 @@ interface Settings {
   weather: { enabled: boolean; useLocation: boolean };
   general: { launchAtLogin: boolean }; // iniciar com o Windows
   workday: { enabled: boolean; startMinute: number; endMinute: number }; // expediente
+  updates: { autoUpdate: boolean }; // consultar a Release ao abrir (padrão true)
 }
 ```
 
@@ -290,10 +297,12 @@ Todos os módulos de domínio previstos existem; `analytics` só lê (`tasks` e
   desenvolvimento.
 - **SQL** sempre parametrizado; entradas validadas no Rust antes de qualquer escrita.
 - Sem `eval`, sem conteúdo remoto, sem plugins de shell/fs/http/sql. Os plugins em uso
-  (`single-instance`, `notification`, `autostart`) são chamados só pelo Rust; nenhuma permissão deles é
+  (`single-instance`, `notification`, `autostart`, `updater`) são chamados só pelo Rust; nenhuma permissão deles é
   concedida ao frontend.
-- **Rede:** só o backend, só com `weather.enabled`, para `api.open-meteo.com` e — com
-  `weather.useLocation` — `nominatim.openstreetmap.org` (nome da cidade). A CSP do
+- **Rede:** só o backend. Previsão do tempo, só com `weather.enabled`: `api.open-meteo.com` e —
+  com `weather.useLocation` — `nominatim.openstreetmap.org` (nome da cidade). Atualização, com
+  `updates.autoUpdate` ou pelo botão "Verificar agora": `github.com` (o `latest.json` e o
+  instalador da última Release), com a assinatura conferida antes de executar. A CSP do
   WebView não tem destinos externos.
 - Blocos `unsafe` apenas em chamadas diretas a APIs do Windows: `PlaySoundW`
   (`notifications/sound.rs`), volume do sistema (`media/mod.rs`) e a caixa de erro da

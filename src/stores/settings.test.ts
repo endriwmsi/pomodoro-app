@@ -36,6 +36,7 @@ const STORED: Settings = {
   weather: { enabled: true, useLocation: false },
   general: { launchAtLogin: false },
   workday: { enabled: true, startMinute: 480, endMinute: 1020 },
+  updates: { autoUpdate: false },
 };
 
 describe('store de configurações (dentro do Tauri)', () => {

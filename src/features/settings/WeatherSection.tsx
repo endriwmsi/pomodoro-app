@@ -34,8 +34,8 @@ export function WeatherSection() {
         </CheckboxField>
       </div>
       <p className="mt-2 text-xs text-ink-muted">
-        Usa a internet: consulta o serviço Open-Meteo, no máximo uma vez a cada 15 minutos. É a
-        única função do Compasso que acessa a rede; desligada, nada é enviado.
+        Usa a internet: consulta o serviço Open-Meteo, no máximo uma vez a cada 15 minutos.
+        Desligada, nenhuma consulta de clima é feita.
       </p>
 
       <div className="mt-4">

@@ -315,7 +315,20 @@ Ver [RELEASING.md](RELEASING.md).
 - [ ] **Primeira execução dos workflows no GitHub** — eles não puderam ser executados
       localmente; erros de compilação em Linux ou macOS só aparecem lá
 - [ ] Testar o aplicativo em Linux e macOS (notch, bandeja, janelas)
-- [ ] Assinatura de código; atualização dentro do aplicativo
+- [ ] Assinatura de código (certificado pago do Windows e conta da Apple)
+
+## Atualização automática (implementada; primeira Release com ela pendente)
+
+Ver [UPDATER.md](UPDATER.md) e [RELEASING.md](RELEASING.md).
+
+- [x] `tauri-plugin-updater`: consulta o `latest.json` da última Release ao abrir, confere a
+      assinatura, instala e reinicia; opção em Configurações → Atualizações (ADR-004 revisado)
+- [x] Chave de assinatura das atualizações (gratuita, sem relação com o certificado do Windows)
+- [x] `npm run release -- patch|minor|major|X.Y.Z`: verifica, fecha o CHANGELOG, versiona,
+      cria a tag e envia; o workflow compila, assina e publica com as notas do CHANGELOG
+- [ ] **Cadastrar o secret `TAURI_SIGNING_PRIVATE_KEY` no GitHub** (passo único, manual)
+- [ ] **Publicar a primeira versão com o atualizador e ver uma instalação antiga se atualizar**
+      — nada disso foi exercitado de ponta a ponta
 
 ## Fase 8 — Polimento e distribuição (parcial)
 

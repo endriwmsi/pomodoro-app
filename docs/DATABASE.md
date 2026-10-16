@@ -157,7 +157,8 @@ A tabela `settings` tem ainda as seções `notch` (`NotchSettings`):
 `{ "soundEnabled": boolean, "notificationsEnabled": boolean }` e `goals` (`GoalSettings`):
 `{ "dailyPomodoros": number | null }` e `weather` (`WeatherSettings`):
 `{ "enabled": boolean, "useLocation": boolean }` e `general` (`GeneralSettings`):
-`{ "launchAtLogin": boolean }` (padrão `false`).
+`{ "launchAtLogin": boolean }` (padrão `false`) e `updates` (`UpdateSettings`):
+`{ "autoUpdate": boolean }` (padrão `true`; ver [UPDATER.md](UPDATER.md)).
 
 `general.launchAtLogin` tem um efeito fora do banco: ao salvar, o backend cria ou remove a
 entrada do Compasso em `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`
@@ -193,8 +194,9 @@ Fonte de verdade: `src-tauri/src/settings/mod.rs`.
 | `alerts.soundEnabled`               | `true`                | —                                                                                        |
 | `alerts.notificationsEnabled`       | `true`                | —                                                                                        |
 | `goals.dailyPomodoros`              | ausente (`null`)      | 1 – 50, ou `null` para nenhuma meta                                                      |
-| `weather.enabled`                   | `false`               | — (liga a única função que usa a internet)                                               |
+| `weather.enabled`                   | `false`               | — (liga a previsão do tempo, que usa a internet)                                         |
 | `weather.useLocation`               | `false`               | —                                                                                        |
+| `updates.autoUpdate`                | `true`                | — (consulta a Release ao abrir e instala; ver [UPDATER.md](UPDATER.md))                  |
 
 O frontend espelha padrões e limites em `src/stores/settings.ts` apenas para o primeiro quadro
 e para mensagens imediatas; ao mudar um valor aqui, atualize lá também.

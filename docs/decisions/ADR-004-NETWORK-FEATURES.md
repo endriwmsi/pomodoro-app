@@ -1,6 +1,7 @@
 # ADR-004 — Funções que usam a internet e APIs nativas do Windows
 
-- **Status:** aceita (decisão do usuário em 2026-10-13)
+- **Status:** aceita (decisão do usuário em 2026-10-13; revisada em 2026-10-15 para incluir a
+  atualização automática)
 - **Data:** 2026-10-13
 
 ## Contexto
@@ -44,6 +45,31 @@ internet. Duas abas pedidas para o notch saem desse perímetro:
 8. Falha de rede nunca é erro do aplicativo: mostram-se os últimos dados, marcados como
    desatualizados, ou uma mensagem de "sem conexão".
 
+### Atualização automática (revisão de 2026-10-15, a pedido do usuário)
+
+9. **Segunda exceção de rede:** o aplicativo consulta a última Release do GitHub
+   (`https://github.com/endriwmsi/pomodoro-app/releases/latest/download/latest.json`) ao abrir
+   e, havendo versão nova, baixa e instala.
+10. **Ligada por padrão, com opção para desligar** (`updates.autoUpdate`, Configurações →
+    Atualizações). É o contrário do clima de propósito: o objetivo da função é atualizar sozinho,
+    e a consulta não envia dado nenhum do usuário. O botão "Verificar agora" consulta mesmo com
+    a opção desligada.
+11. **Assinatura obrigatória:** cada pacote é assinado com uma chave minisign e o aplicativo só
+    executa o que confere com a chave pública gravada em `tauri.conf.json`. A chave é gratuita e
+    não depende de certificado de assinatura de código do Windows.
+12. A requisição parte do **backend Rust** (`tauri-plugin-updater`, usado só pelo Rust: nenhuma
+    permissão do plugin vai ao frontend) e a CSP do WebView continua sem destinos externos.
+13. **Uma consulta por abertura**, 8 s depois de iniciar, e nunca em build de desenvolvimento.
+    Sem consulta periódica.
+14. Instala só com o timer parado, depois de registrar a sessão de forma ordenada
+    ([UPDATER.md](../UPDATER.md)). Falha de rede ou ausência de Release nunca é erro visível: vai
+    para o log.
+
+Alternativas descartadas: **instalador novo à mão** (era o estado anterior; sem custo, mas o
+usuário precisa lembrar de procurar), **atualizador próprio** com `ureq` e conferência de
+assinatura (reimplementaria o que o plugin oficial já faz e testa) e **Microsoft Store**
+(exige conta de desenvolvedor paga).
+
 ### APIs nativas do Windows
 
 Usa-se o crate `windows` (bindings oficiais da Microsoft) para o que o Tauri não cobre:
@@ -76,7 +102,10 @@ inicialização (`MessageBoxW`).
   `AGENTS.md` e o `README.md` foram ajustados; qualquer **nova** função de rede exige revisar
   este ADR.
 - Novas dependências: `ureq` (com `rustls`), `windows` e `base64`. O executável cresceu de
-  cerca de 4 MB para cerca de 6 MB.
+  cerca de 4 MB para cerca de 6 MB. A atualização acrescenta `tauri-plugin-updater` (que traz
+  `reqwest` com `rustls`); o tamanho do executável com ele ainda não foi medido.
+- "Sem internet" passa a ter duas exceções. O texto do instalador, `AGENTS.md`, `README.md` e as
+  Configurações dizem isso.
 - Há blocos `unsafe` em três pontos, todos chamadas diretas a APIs do Windows:
   `notifications/sound.rs`, `media/mod.rs` (volume) e `lib.rs` (caixa de erro).
 - A lista de capitais é fixa e brasileira; usuários de outros países dependem da localização.

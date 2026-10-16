@@ -16,6 +16,7 @@ mod settings;
 mod tasks;
 mod timer;
 mod tray;
+mod updater;
 mod weather;
 mod windows;
 
@@ -126,6 +127,7 @@ pub fn run() {
             windows::show_main(app, None);
         }))
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             None,
@@ -171,6 +173,7 @@ pub fn run() {
                     clock,
                 )));
                 app.manage(NotchState::default());
+                app.manage(Arc::new(updater::UpdateService::default()));
 
                 tray::build(app.handle())?;
                 windows::notch::configure(app.handle(), &settings.notch)?;
@@ -181,6 +184,7 @@ pub fn run() {
                 {
                     eprintln!("falha ao ajustar o início com o Windows: {error}");
                 }
+                updater::spawn_startup_check(app.handle());
                 Ok(())
             })();
             if let Err(error) = &started {
@@ -237,6 +241,9 @@ pub fn run() {
             commands::tasks::task_move,
             commands::tasks::timer_set_task,
             commands::tasks::timer_focus_task,
+            commands::updater::update_check,
+            commands::updater::update_install,
+            commands::updater::update_pending,
             commands::window::notch_set_layout,
             commands::window::preview_alerts,
             commands::window::show_main_window,

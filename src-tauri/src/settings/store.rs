@@ -6,7 +6,7 @@ use serde::Serialize;
 
 use super::{
     AlertSettings, AppearanceSettings, GeneralSettings, GoalSettings, NotchBorder, NotchSettings,
-    Settings, TimerSettings, WeatherSettings, WorkdaySettings,
+    Settings, TimerSettings, UpdateSettings, WeatherSettings, WorkdaySettings,
 };
 use crate::error::AppError;
 
@@ -18,6 +18,7 @@ const KEY_GOALS: &str = "goals";
 const KEY_WEATHER: &str = "weather";
 const KEY_GENERAL: &str = "general";
 const KEY_WORKDAY: &str = "workday";
+const KEY_UPDATES: &str = "updates";
 
 /// Carrega as configurações. Seções ausentes, ilegíveis ou fora dos limites
 /// voltam ao padrão: uma linha danificada não pode impedir o aplicativo de
@@ -54,6 +55,7 @@ pub fn load(conn: &Connection) -> Result<Settings, AppError> {
         weather: load_section::<WeatherSettings>(conn, KEY_WEATHER)?,
         general: load_section::<GeneralSettings>(conn, KEY_GENERAL)?,
         workday,
+        updates: load_section::<UpdateSettings>(conn, KEY_UPDATES)?,
     })
 }
 
@@ -69,6 +71,7 @@ pub fn save(conn: &mut Connection, settings: &Settings) -> Result<(), AppError> 
     save_section(&tx, KEY_WEATHER, &settings.weather)?;
     save_section(&tx, KEY_GENERAL, &settings.general)?;
     save_section(&tx, KEY_WORKDAY, &settings.workday)?;
+    save_section(&tx, KEY_UPDATES, &settings.updates)?;
     tx.commit()?;
     Ok(())
 }
@@ -153,6 +156,7 @@ mod tests {
                 start_minute: 480,
                 end_minute: 1020,
             },
+            updates: UpdateSettings { auto_update: false },
         }
     }
 
@@ -193,7 +197,7 @@ mod tests {
             db.with_conn(|conn| load(conn)).unwrap(),
             Settings::default()
         );
-        assert_eq!(stored_rows(&db), 8);
+        assert_eq!(stored_rows(&db), 9);
     }
 
     #[test]

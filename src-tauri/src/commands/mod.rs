@@ -12,4 +12,5 @@ pub mod routines;
 pub mod settings;
 pub mod tasks;
 pub mod timer;
+pub mod updater;
 pub mod window;

@@ -24,7 +24,8 @@
 | [MEDIA.md](MEDIA.md)                             | Aba de música: sessão de mídia do Windows, volume, contrato             |
 | [NOTIFICATIONS.md](NOTIFICATIONS.md)             | Som e notificação ao concluir uma sessão; regra de "exatamente uma vez" |
 | [ADR-002](decisions/ADR-002-TIMER-ENGINE.md)     | Diretrizes da engine do timer                                           |
-| [ADR-004](decisions/ADR-004-NETWORK-FEATURES.md) | Exceção de rede (clima) e APIs nativas do Windows                       |
+| [UPDATER.md](UPDATER.md)                         | Atualização automática: assinatura, fluxo, comandos, limitações         |
+| [ADR-004](decisions/ADR-004-NETWORK-FEATURES.md) | Exceções de rede (clima, atualização) e APIs nativas do Windows         |
 | [ADR-003](decisions/ADR-003-DATABASE-LAYER.md)   | rusqlite, conexão única, migrations próprias                            |
 
 Não há documentos de módulo pendentes: todos os módulos previstos estão documentados.

@@ -25,6 +25,9 @@ tauri = { version = "2", features = ["tray-icon", "macos-private-api"] }
 tauri-plugin-autostart = "2"
 tauri-plugin-notification = "2"
 tauri-plugin-single-instance = "2"
+# Atualização do aplicativo (updater/): baixa a Release do GitHub e confere a
+# assinatura com a chave pública de `tauri.conf.json` antes de instalar.
+tauri-plugin-updater = "2"
 # Cliente HTTP da previsão do tempo — a única funcionalidade que usa a rede.
 ureq = "3"
 

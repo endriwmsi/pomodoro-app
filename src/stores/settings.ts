@@ -65,6 +65,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     weather: { enabled: false, useLocation: false },
     general: { launchAtLogin: false },
     workday: { enabled: false, startMinute: 540, endMinute: 1080 },
+    updates: { autoUpdate: true },
   },
   status: isTauri() ? 'loading' : 'ready',
 

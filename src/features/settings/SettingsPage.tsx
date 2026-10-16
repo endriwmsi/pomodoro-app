@@ -6,6 +6,7 @@ import { GeneralSection } from '@/features/settings/GeneralSection';
 import { GoalsSection } from '@/features/settings/GoalsSection';
 import { NotchSection } from '@/features/settings/NotchSection';
 import { TimerSection } from '@/features/settings/TimerSection';
+import { UpdatesSection } from '@/features/settings/UpdatesSection';
 import { WeatherSection } from '@/features/settings/WeatherSection';
 import { useSettingsStore } from '@/stores/settings';
 
@@ -28,6 +29,7 @@ export function SettingsPage() {
       <NotchSection />
       <AlertsSection />
       <WeatherSection />
+      <UpdatesSection />
       <AboutSection />
     </>
   );

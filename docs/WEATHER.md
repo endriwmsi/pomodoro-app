@@ -1,6 +1,6 @@
 # Clima
 
-Aba do notch com a previsão do tempo. É a **única função do aplicativo que usa a internet** e
+Aba do notch com a previsão do tempo. É a **única função, além da [atualização do aplicativo](UPDATER.md), que usa a internet** e
 fica **desligada por padrão** — a decisão e seus limites estão em
 [ADR-004](decisions/ADR-004-NETWORK-FEATURES.md).
 

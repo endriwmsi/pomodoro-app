@@ -5,6 +5,27 @@ Mudanças relevantes para usuários e desenvolvedores. Formato inspirado em
 
 ## [Não lançado]
 
+### Adicionado
+
+- **Atualização automática.** Ao abrir, o Compasso consulta a última Release do GitHub e, havendo
+  versão nova, baixa, confere a assinatura, instala e reinicia sozinho. Opção em Configurações →
+  Atualizações (ligada por padrão), com botão "Verificar agora". Usa `tauri-plugin-updater`;
+  comandos `update_pending`, `update_check` e `update_install`; nova seção de configurações
+  `updates` (`autoUpdate`). Documentado em `docs/UPDATER.md`; ADR-004 revisado (segunda exceção
+  de rede). A primeira versão com o atualizador precisa ser instalada à mão.
+- **Publicação com um comando:** `npm run release -- patch|minor|major|X.Y.Z` confere o
+  repositório, roda `npm run check`, fecha o CHANGELOG, define a versão, cria o commit e a tag e
+  envia. O workflow Release assina os pacotes, publica o `latest.json` e usa o texto do
+  CHANGELOG como notas da Release.
+
+### Alterado
+
+- O workflow Release exige o secret `TAURI_SIGNING_PRIVATE_KEY` (chave gratuita do Tauri; ver
+  `docs/RELEASING.md`). Gerar o instalador localmente passa a exigir a mesma chave, a menos que
+  seja com `--no-bundle`.
+- O texto de boas-vindas do instalador, `AGENTS.md`, `README.md` e as Configurações deixam de
+  dizer que o clima é a única função que usa a rede.
+
 ## [0.2.0] — 2026-10-15
 
 Primeira versão numerada desde a 0.1.0, que só existiu como instalador local, sem publicação

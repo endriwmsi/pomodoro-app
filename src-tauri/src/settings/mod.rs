@@ -308,14 +308,28 @@ impl WorkdaySettings {
     }
 }
 
-/// Previsão do tempo no notch. É a única funcionalidade que usa a internet;
-/// por isso começa desligada.
+/// Previsão do tempo no notch. Usa a internet; por isso começa desligada.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct WeatherSettings {
     pub enabled: bool,
     /// Usar a localização do computador; sem ela, mostram-se capitais.
     pub use_location: bool,
+}
+
+/// Atualização do aplicativo. Usa a internet (só para consultar a Release do
+/// GitHub); por isso é uma opção explícita, que o usuário pode desligar.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct UpdateSettings {
+    /// Consultar ao abrir e, havendo versão nova, instalá-la e reiniciar.
+    pub auto_update: bool,
+}
+
+impl Default for UpdateSettings {
+    fn default() -> Self {
+        Self { auto_update: true }
+    }
 }
 
 /// Avisos ao concluir uma sessão.
@@ -346,6 +360,7 @@ pub struct Settings {
     pub weather: WeatherSettings,
     pub general: GeneralSettings,
     pub workday: WorkdaySettings,
+    pub updates: UpdateSettings,
 }
 
 impl Settings {
@@ -534,7 +549,8 @@ mod tests {
                 "goals": { "dailyPomodoros": null },
                 "weather": { "enabled": false, "useLocation": false },
                 "general": { "launchAtLogin": false },
-                "workday": { "enabled": false, "startMinute": 540, "endMinute": 1080 }
+                "workday": { "enabled": false, "startMinute": 540, "endMinute": 1080 },
+                "updates": { "autoUpdate": true }
             })
         );
     }

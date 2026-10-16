@@ -5,8 +5,9 @@ produtividade e um notch retrátil na borda do monitor.
 
 - **Totalmente local.** Seus dados ficam em um arquivo SQLite no seu computador. Não há conta,
   servidor, anúncios nem telemetria: o aplicativo **não rastreia nada**.
-- **Funciona sem internet.** A única função que usa a rede é a previsão do tempo do notch,
-  opcional e desligada por padrão — o que ela envia está em [docs/WEATHER.md](docs/WEATHER.md).
+- **Funciona sem internet.** Só duas funções usam a rede: a previsão do tempo do notch,
+  opcional e desligada por padrão ([docs/WEATHER.md](docs/WEATHER.md)), e a verificação de
+  atualizações ao abrir, que pode ser desligada ([docs/UPDATER.md](docs/UPDATER.md)).
 - **Código aberto**, sob a [licença MIT](LICENSE):
   [github.com/endriwmsi/pomodoro-app](https://github.com/endriwmsi/pomodoro-app).
 
