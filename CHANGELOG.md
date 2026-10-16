@@ -5,6 +5,8 @@ Mudanças relevantes para usuários e desenvolvedores. Formato inspirado em
 
 ## [Não lançado]
 
+## [0.3.0] — 2026-10-15
+
 ### Adicionado
 
 - **Atualização automática.** Ao abrir, o Compasso consulta a última Release do GitHub e, havendo
