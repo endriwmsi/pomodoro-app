@@ -5,6 +5,13 @@ Mudanças relevantes para usuários e desenvolvedores. Formato inspirado em
 
 ## [Não lançado]
 
+### Corrigido
+
+- O workflow Release falhava logo no início nos quatro sistemas: como o repositório tem
+  `pnpm-lock.yaml` além do `package-lock.json`, a ação `tauri-apps/tauri-action` escolhia o pnpm,
+  que o workflow não instala. Agora ela usa `npx tauri`. A versão 0.3.0 chegou a ser etiquetada,
+  mas **nunca foi publicada** no GitHub; a primeira Release com o atualizador é a seguinte.
+
 ## [0.3.0] — 2026-10-15
 
 ### Adicionado

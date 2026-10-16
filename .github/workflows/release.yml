@@ -97,6 +97,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
+          # O repositório tem `pnpm-lock.yaml` além do `package-lock.json`: sem
+          # isto a ação escolhe o pnpm, que o workflow não instala (usa `npm ci`).
+          tauriScript: npx tauri
           tagName: ${{ github.ref_name }}
           releaseName: Compasso ${{ github.ref_name }}
           releaseBody: |
