@@ -5,6 +5,8 @@ Mudanças relevantes para usuários e desenvolvedores. Formato inspirado em
 
 ## [Não lançado]
 
+## [0.3.1] — 2026-10-15
+
 ### Corrigido
 
 - O workflow Release falhava logo no início nos quatro sistemas: como o repositório tem
