@@ -13,7 +13,10 @@ A sequência, a partir do instante em que o tempo ativo atinge a duração plane
 3. as janelas recebem `timer:state`;
 4. `Notifier::session_completed(fase concluída, estado seguinte)` é chamado → `Alerts`:
    - toca o som, se `alerts.soundEnabled`;
-   - mostra a notificação do Windows, se `alerts.notificationsEnabled`.
+   - mostra a notificação do Windows, se `alerts.notificationsEnabled`;
+5. o notch recebe `notch:notice` com o mesmo título e texto e, se `notch.notices` estiver ligado,
+   abre por 3 s mostrando o aviso — ver
+   [WINDOW_MANAGER.md](WINDOW_MANAGER.md#aviso-de-fim-de-sessão).
 
 As estatísticas não precisam de passo próprio: serão calculadas das sessões gravadas (Fase 7).
 

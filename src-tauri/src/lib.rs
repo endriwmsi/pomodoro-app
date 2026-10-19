@@ -54,6 +54,8 @@ impl Notifier for AppNotifier {
 
     fn session_completed(&self, finished: Phase, next: &TimerSnapshot) {
         self.alerts.session_completed(finished, next);
+        let (title, body) = notifications::completion_message(finished, next);
+        windows::notch::announce(&self.app, &windows::notch::Notice { title, body });
         if finished == Phase::Focus {
             // A contagem de pomodoros da tarefa mudou.
             commands::tasks::announce_change(&self.app);

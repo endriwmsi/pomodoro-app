@@ -35,7 +35,6 @@ export interface TimerSettings {
 /** Espelha `settings::NotchPosition`: a borda do monitor principal em que o notch fica. */
 export type NotchPosition = 'top' | 'left' | 'right';
 
-/** Espelha `settings::Settings`. Também é o payload de `settings:changed`. */
 /** Espelha `settings::NotchTheme`: cor do notch; `system` acompanha o Windows. */
 export type NotchTheme = 'dark' | 'light' | 'system';
 
@@ -50,10 +49,21 @@ export interface NotchBorder {
   color: string;
 }
 
+/** Espelha `settings::NotchSettings`. */
+export interface NotchSettings {
+  enabled: boolean;
+  position: NotchPosition;
+  theme: NotchTheme;
+  border: NotchBorder;
+  /** Abrir o notch por alguns segundos, com um aviso, quando um foco ou uma pausa termina. */
+  notices: boolean;
+}
+
+/** Espelha `settings::Settings`. Também é o payload de `settings:changed`. */
 export interface Settings {
   appearance: { template: TemplateId; background: BackgroundChoice };
   timer: TimerSettings;
-  notch: { enabled: boolean; position: NotchPosition; theme: NotchTheme; border: NotchBorder };
+  notch: NotchSettings;
   alerts: { soundEnabled: boolean; notificationsEnabled: boolean };
   /** `dailyPomodoros`: meta de pomodoros por dia, ou `null` para nenhuma. */
   goals: { dailyPomodoros: number | null };
@@ -405,6 +415,15 @@ export function mediaSetVolume(level: number): Promise<MediaState> {
  * da janela. `compact` é a aba Música, só com o player.
  */
 export type NotchLayout = 'collapsed' | 'expanded' | 'compact';
+
+/** Espelha `windows::notch::Notice`: payload de `notch:notice`. */
+export interface NotchNotice {
+  title: string;
+  body: string;
+}
+
+/** Enviado só ao notch quando um foco ou uma pausa termina. */
+export const NOTCH_NOTICE_EVENT = 'notch:notice';
 
 /** Ajusta o tamanho da janela do notch (só faz sentido na janela do notch). */
 export function notchSetLayout(layout: NotchLayout): Promise<void> {

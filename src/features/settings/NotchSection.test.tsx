@@ -83,3 +83,32 @@ describe('NotchSection — borda animada', () => {
     expect(trigger).toHaveTextContent('#22c55e');
   });
 });
+
+describe('NotchSection — aviso de fim de sessão', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    commands.updateSettings.mockImplementation((settings) => Promise.resolve(settings));
+  });
+
+  afterEach(() => {
+    useSettingsStore.setState(useSettingsStore.getInitialState(), true);
+  });
+
+  it('vem ligado e grava ao desligar', async () => {
+    render(<NotchSection />);
+    const checkbox = screen.getByRole('checkbox', {
+      name: 'Avisar no notch quando um foco ou uma pausa terminar',
+    });
+    expect(checkbox).toBeChecked();
+
+    fireEvent.click(checkbox);
+    await flush();
+
+    expect(commands.updateSettings).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        notch: expect.objectContaining({ notices: false }) as unknown,
+      }),
+    );
+    expect(checkbox).not.toBeChecked();
+  });
+});

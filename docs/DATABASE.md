@@ -153,7 +153,7 @@ Linha única (`id = 1`) com a posição no ciclo, para sobreviver ao reinício.
 As regras de gravação e recuperação estão em [TIMER_ENGINE.md](TIMER_ENGINE.md#persistência).
 
 A tabela `settings` tem ainda as seções `notch` (`NotchSettings`):
-`{ "enabled": boolean, "position": "top" | "left" | "right", "theme": "dark" | "light" | "system", "border": { "enabled": boolean, "style": "rainbow" | "solid", "color": "#rrggbb" } }` e `alerts` (`AlertSettings`):
+`{ "enabled": boolean, "position": "top" | "left" | "right", "theme": "dark" | "light" | "system", "border": { "enabled": boolean, "style": "rainbow" | "solid", "color": "#rrggbb" }, "notices": boolean }` e `alerts` (`AlertSettings`):
 `{ "soundEnabled": boolean, "notificationsEnabled": boolean }` e `goals` (`GoalSettings`):
 `{ "dailyPomodoros": number | null }` e `weather` (`WeatherSettings`):
 `{ "enabled": boolean, "useLocation": boolean }` e `general` (`GeneralSettings`):
@@ -191,6 +191,7 @@ Fonte de verdade: `src-tauri/src/settings/mod.rs`.
 | `notch.border.enabled`              | `false`               | —                                                                                        |
 | `notch.border.style`                | `rainbow`             | `rainbow`, `solid`                                                                       |
 | `notch.border.color`                | `#f59e0b`             | `#` e seis dígitos hexadecimais (vale mesmo com a borda desligada)                       |
+| `notch.notices`                     | `true`                | — (abre o notch por 3 s ao fim de cada foco e pausa)                                     |
 | `alerts.soundEnabled`               | `true`                | —                                                                                        |
 | `alerts.notificationsEnabled`       | `true`                | —                                                                                        |
 | `goals.dailyPomodoros`              | ausente (`null`)      | 1 – 50, ou `null` para nenhuma meta                                                      |

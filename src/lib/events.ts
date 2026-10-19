@@ -2,10 +2,12 @@ import { listen } from '@tauri-apps/api/event';
 
 import {
   NAVIGATE_EVENT,
+  NOTCH_NOTICE_EVENT,
   ROUTINES_CHANGED_EVENT,
   SETTINGS_CHANGED_EVENT,
   TASKS_CHANGED_EVENT,
   TIMER_STATE_EVENT,
+  type NotchNotice,
   type Settings,
   type TimerSnapshot,
 } from '@/lib/commands';
@@ -50,5 +52,12 @@ export function subscribeRoutinesChanged(handler: () => void): Promise<() => voi
 export function subscribeTasksChanged(handler: () => void): Promise<() => void> {
   return listen(TASKS_CHANGED_EVENT, () => {
     handler();
+  });
+}
+
+/** Assina `notch:notice`: um foco ou uma pausa terminou (só a janela do notch recebe). */
+export function subscribeNotchNotice(handler: (notice: NotchNotice) => void): Promise<() => void> {
+  return listen<NotchNotice>(NOTCH_NOTICE_EVENT, (event) => {
+    handler(event.payload);
   });
 }

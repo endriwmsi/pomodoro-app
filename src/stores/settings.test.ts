@@ -30,6 +30,7 @@ const STORED: Settings = {
     position: 'left',
     theme: 'light',
     border: { enabled: true, style: 'solid', color: '#22c55e' },
+    notices: false,
   },
   alerts: { soundEnabled: false, notificationsEnabled: true },
   goals: { dailyPomodoros: 8 },

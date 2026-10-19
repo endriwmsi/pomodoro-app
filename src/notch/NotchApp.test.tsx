@@ -5,6 +5,7 @@ import type {
   MediaAction,
   MediaState,
   NotchLayout,
+  NotchNotice,
   Routine,
   Settings,
   Task,
@@ -12,7 +13,7 @@ import type {
   TimerSnapshot,
   WeatherReport,
 } from '@/lib/commands';
-import { NotchApp } from '@/notch/NotchApp';
+import { NOTICE_MS, NotchApp } from '@/notch/NotchApp';
 import { DEFAULT_NOTCH_BORDER, DEFAULT_TIMER_SETTINGS, useSettingsStore } from '@/stores/settings';
 import { useMediaStore } from '@/stores/media';
 import { useRoutinesStore } from '@/stores/routines';
@@ -39,6 +40,7 @@ const backend = vi.hoisted(() => ({
   routineSkip: vi.fn<() => Promise<TimerSnapshot>>(),
   weatherGet: vi.fn<() => Promise<WeatherReport>>(),
   emitTimer: undefined as ((snapshot: TimerSnapshot) => void) | undefined,
+  emitNotice: undefined as ((notice: NotchNotice) => void) | undefined,
 }));
 
 vi.mock('@tauri-apps/api/core', () => ({ isTauri: () => true }));
@@ -72,6 +74,10 @@ vi.mock('@/lib/events', () => ({
   subscribeSettingsChanged: () => Promise.resolve(() => undefined),
   subscribeTasksChanged: () => Promise.resolve(() => undefined),
   subscribeRoutinesChanged: () => Promise.resolve(() => undefined),
+  subscribeNotchNotice: (handler: (notice: NotchNotice) => void) => {
+    backend.emitNotice = handler;
+    return Promise.resolve(() => undefined);
+  },
 }));
 
 const RUNNING: TimerSnapshot = {
@@ -152,7 +158,13 @@ const PLAYING: MediaState = {
 const SETTINGS: Settings = {
   appearance: { template: 'glass', background: { kind: 'default' } },
   timer: DEFAULT_TIMER_SETTINGS,
-  notch: { enabled: true, position: 'top', theme: 'dark', border: DEFAULT_NOTCH_BORDER },
+  notch: {
+    enabled: true,
+    position: 'top',
+    theme: 'dark',
+    border: DEFAULT_NOTCH_BORDER,
+    notices: true,
+  },
   alerts: { soundEnabled: true, notificationsEnabled: true },
   goals: { dailyPomodoros: null },
   weather: { enabled: false, useLocation: false },
@@ -503,6 +515,112 @@ describe('NotchApp', () => {
     await settle();
 
     expect(backend.weatherGet).toHaveBeenCalledTimes(2);
+  });
+
+  describe('aviso de fim de sessão', () => {
+    const NOTICE: NotchNotice = {
+      title: 'Foco concluído',
+      body: 'Hora de uma pausa curta (5 min).',
+    };
+
+    async function announce(notice = NOTICE) {
+      act(() => {
+        backend.emitNotice?.(notice);
+      });
+      await settle();
+    }
+
+    it('abre na aba Timer com o aviso, recolhe em seguida e volta à aba anterior', async () => {
+      const hoverArea = await renderNotch();
+      fireEvent.mouseEnter(hoverArea);
+      await settle();
+      fireEvent.click(screen.getByRole('tab', { name: 'Tarefas' }));
+      fireEvent.mouseLeave(hoverArea);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1_000);
+      });
+      expect(backend.notchSetLayout).toHaveBeenLastCalledWith('collapsed');
+      backend.notchSetLayout.mockClear();
+
+      await announce();
+
+      expect(backend.notchSetLayout).toHaveBeenCalledExactlyOnceWith('expanded');
+      expect(screen.getByRole('tab', { name: 'Timer' })).toHaveAttribute('aria-selected', 'true');
+      const banner = screen.getByRole('status');
+      expect(banner).toHaveTextContent('Foco concluído');
+      expect(banner).toHaveTextContent('Hora de uma pausa curta (5 min).');
+      expect(banner).toHaveClass('opacity-100');
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(NOTICE_MS - 100);
+      });
+      expect(backend.notchSetLayout).not.toHaveBeenCalledWith('collapsed');
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(500);
+      });
+      expect(backend.notchSetLayout).toHaveBeenLastCalledWith('collapsed');
+      expect(banner).toHaveClass('opacity-0');
+      expect(screen.getByRole('tab', { name: 'Tarefas' })).toHaveAttribute('aria-selected', 'true');
+    });
+
+    it('um novo aviso reinicia a contagem e mostra o texto novo', async () => {
+      await renderNotch();
+      await announce();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(NOTICE_MS - 500);
+      });
+
+      await announce({ title: 'Pausa encerrada', body: 'Hora de voltar ao foco (25 min).' });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(NOTICE_MS - 500);
+      });
+
+      expect(backend.notchSetLayout).not.toHaveBeenCalledWith('collapsed');
+      expect(screen.getByRole('status')).toHaveTextContent('Pausa encerrada');
+    });
+
+    it('com o mouse sobre o notch, mostra o aviso sem trocar de aba nem recolher', async () => {
+      const hoverArea = await renderNotch();
+      fireEvent.mouseEnter(hoverArea);
+      await settle();
+      fireEvent.click(screen.getByRole('tab', { name: 'Tarefas' }));
+      await settle();
+
+      await announce();
+      expect(screen.getByRole('tab', { name: 'Tarefas' })).toHaveAttribute('aria-selected', 'true');
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(NOTICE_MS * 2);
+      });
+
+      expect(backend.notchSetLayout).not.toHaveBeenCalledWith('collapsed');
+    });
+
+    it('se o mouse entra durante o aviso, o painel passa a ser do usuário', async () => {
+      const hoverArea = await renderNotch();
+      await announce();
+
+      fireEvent.mouseEnter(hoverArea);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(NOTICE_MS * 2);
+      });
+
+      expect(backend.notchSetLayout).not.toHaveBeenCalledWith('collapsed');
+      expect(screen.getByRole('status', { hidden: true })).toHaveClass('opacity-0');
+    });
+
+    it('não abre com os avisos desligados', async () => {
+      backend.getSettings.mockResolvedValue({
+        ...SETTINGS,
+        notch: { ...SETTINGS.notch, notices: false },
+      });
+      await renderNotch();
+
+      await announce();
+
+      expect(backend.notchSetLayout).not.toHaveBeenCalled();
+      expect(screen.getByRole('status', { hidden: true })).toHaveClass('opacity-0');
+    });
   });
 
   it('mesmo com música tocando, o painel abre na aba em que estava', async () => {

@@ -167,6 +167,22 @@ export function NotchSection() {
 
       <div className="mt-4">
         <CheckboxField
+          checked={settings.notch.notices}
+          disabled={!settings.notch.enabled}
+          onChange={(notices) => {
+            update({ notices });
+          }}
+        >
+          Avisar no notch quando um foco ou uma pausa terminar
+        </CheckboxField>
+      </div>
+      <p className="mt-2 text-xs text-ink-muted">
+        O notch se abre na aba Timer por alguns segundos, mostrando o que terminou e o que vem a
+        seguir, e se recolhe sozinho.
+      </p>
+
+      <div className="mt-4">
+        <CheckboxField
           checked={border.enabled}
           disabled={!settings.notch.enabled}
           onChange={(enabled) => {

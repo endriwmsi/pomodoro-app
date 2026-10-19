@@ -85,6 +85,8 @@
 | `src/features/routines/RoutinesPage.test.tsx` | Horários e dias (conversões, rótulos, rotinas do dia, próxima rotina), lista, criar pelo diálogo, validação local e do backend, editar/desligar/excluir, expediente, faixa do dia |
 | `src/features/settings/BackgroundPicker.test.tsx` | Resolução da escolha em imagem (padrão, embutida, do usuário, removida), grade, envio, recusa do backend, arquivo grande demais |
 
+| `src/notch/NotchApp.test.tsx` (aviso de fim de sessão) | Recolhido: abre na aba Timer com o aviso, recolhe depois de `NOTICE_MS` e volta à aba anterior; novo aviso reinicia a contagem; aberto pelo usuário: não troca de aba nem recolhe; mouse entra durante o aviso; avisos desligados |
+| `src/features/settings/NotchSection.test.tsx` (aviso) | Opção ligada por padrão e gravada ao desligar |
 | `src/features/settings/GeneralSection.test.tsx` | Opção de iniciar com o Windows: desligada por padrão, gravação da escolha, erro do backend sem mudar a opção |
 
 O arrastar e soltar em si não é testado no jsdom (sem layout): testa-se a função que decide o

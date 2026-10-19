@@ -230,6 +230,9 @@ pub struct NotchSettings {
     pub theme: NotchTheme,
     pub position: NotchPosition,
     pub border: NotchBorder,
+    /// Abre o notch por alguns segundos, com um aviso, quando um foco ou uma
+    /// pausa termina.
+    pub notices: bool,
 }
 
 impl Default for NotchSettings {
@@ -239,6 +242,7 @@ impl Default for NotchSettings {
             position: NotchPosition::Top,
             theme: NotchTheme::System,
             border: NotchBorder::default(),
+            notices: true,
         }
     }
 }
@@ -396,6 +400,7 @@ mod tests {
         assert!(!settings.timer.auto_start_breaks);
         assert!(!settings.timer.auto_start_focus);
         assert!(settings.notch.enabled);
+        assert!(settings.notch.notices);
         assert_eq!(settings.notch.position, NotchPosition::Top);
         assert!(settings.alerts.sound_enabled);
         assert!(settings.alerts.notifications_enabled);
@@ -543,7 +548,8 @@ mod tests {
                     "enabled": true,
                     "position": "top",
                     "theme": "system",
-                    "border": { "enabled": false, "style": "rainbow", "color": "#f59e0b" }
+                    "border": { "enabled": false, "style": "rainbow", "color": "#f59e0b" },
+                    "notices": true
                 },
                 "alerts": { "soundEnabled": true, "notificationsEnabled": true },
                 "goals": { "dailyPomodoros": null },

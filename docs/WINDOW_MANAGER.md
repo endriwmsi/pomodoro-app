@@ -228,6 +228,28 @@ Para ajustar o desenho no navegador, sem o aplicativo: `npm run dev` e abra
 4. **Fixar:** o botão de alfinete mantém o painel aberto mesmo com o mouse fora; clicar de novo
    solta.
 
+### Aviso de fim de sessão
+
+Quando um foco ou uma pausa **termina** (conclusão pelo tempo, a mesma regra "exatamente uma
+vez" do som e da notificação — ver [NOTIFICATIONS.md](NOTIFICATIONS.md)), o backend envia
+`notch:notice` só à janela do notch, com título e texto de `completion_message` (por exemplo
+"Foco concluído" / "Hora de uma pausa curta (5 min)."). Pular, reiniciar ou interromper não
+avisa.
+
+- **Recolhido:** o notch abre na aba **Timer**, mostra o aviso por cima do conteúdo da aba
+  (`NoticeBanner`, em `NotchApp.tsx`) e, depois de `NOTICE_MS` (3 s), recolhe sozinho e volta à
+  aba em que estava. A volta acontece só depois da animação de recolher, para a troca de aba não
+  aparecer.
+- **Já aberto** (mouse em cima ou fixado): mostra o aviso se a aba Timer estiver à vista, sem
+  trocar de aba e sem recolher — o painel é do usuário.
+- **O mouse entra durante o aviso:** o painel passa a ser do usuário; ele não recolhe sozinho e
+  fica na aba Timer.
+- **Outro aviso antes de recolher:** troca o texto e recomeça os 3 s.
+
+Configuração `notch.notices` (padrão: ligada), em **Configurações → Notch**. É conferida pela
+própria janela do notch ao receber o evento, junto com `notch.enabled`; o backend sempre emite.
+Independe de `alerts.notificationsEnabled` (a notificação do Windows).
+
 ### Abas
 
 O painel expandido tem um **seletor de abas** e uma área de conteúdo.
@@ -252,7 +274,7 @@ Troca-se de aba:
 
 | Aba     | Arquivo                | Conteúdo                                                                                |
 | ------- | ---------------------- | --------------------------------------------------------------------------------------- |
-| Timer   | `notch/TimerTab.tsx`   | Fase, tarefa escolhida, tempo, iniciar/pausar/retomar, pular, abrir o app               |
+| Timer   | `notch/TimerTab.tsx`   | Fase, tarefa escolhida, tempo, iniciar/pausar/retomar, pular, abrir o app; avisos       |
 | Tarefas | `notch/TasksTab.tsx`   | Tempo (resumido) e as tarefas abertas, cada uma com **Focar** e uma caixa para concluir |
 | Música  | `notch/MediaTab.tsx`   | Só o player completo, em um painel menor — ver [MEDIA.md](MEDIA.md)                     |
 | Clima   | `notch/WeatherTab.tsx` | Previsão do tempo; **só existe com a função ligada** — ver [WEATHER.md](WEATHER.md)     |
@@ -272,7 +294,8 @@ O tempo é desenhado conforme o template ativo (matriz de pontos no template Mat
 
 O notch usa as mesmas stores da janela principal (`stores/timer.ts`, `stores/settings.ts`,
 `stores/tasks.ts`), em sua própria instância de WebView: recebe `timer:state`,
-`settings:changed` e `tasks:changed` do backend e não mantém estado próprio.
+`settings:changed` e `tasks:changed` do backend e não mantém estado próprio. Só ele recebe
+`notch:notice`.
 
 Permissões (`src-tauri/capabilities/notch.json`): apenas `core:event:allow-listen` e
 `allow-unlisten`. Os comandos próprios do aplicativo não exigem permissão.

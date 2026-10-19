@@ -136,6 +136,7 @@ mod tests {
                     style: crate::settings::NotchBorderStyle::Solid,
                     color: "#22c55e".to_owned(),
                 },
+                notices: false,
             },
             alerts: AlertSettings {
                 sound_enabled: false,

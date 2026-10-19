@@ -6,8 +6,8 @@
 
 use std::sync::{Mutex, PoisonError};
 
-use serde::Deserialize;
-use tauri::{AppHandle, Manager, PhysicalPosition, PhysicalSize};
+use serde::{Deserialize, Serialize};
+use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize};
 
 use super::NOTCH;
 use crate::settings::{NotchPosition, NotchSettings};
@@ -154,6 +154,25 @@ pub fn apply(app: &AppHandle) -> tauri::Result<()> {
 pub fn set_layout(app: &AppHandle, layout: Layout) -> tauri::Result<()> {
     write(&app.state::<NotchState>().layout, layout);
     apply(app)
+}
+
+/// Evento enviado só ao notch quando um foco ou uma pausa termina.
+pub const NOTICE_EVENT: &str = "notch:notice";
+
+/// Aviso que o notch mostra por alguns segundos (payload de `notch:notice`).
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Notice {
+    pub title: String,
+    pub body: String,
+}
+
+/// Pede ao notch que mostre um aviso. Se ele vai abrir depende da
+/// configuração `notch.notices`, conferida pela própria janela.
+pub fn announce(app: &AppHandle, notice: &Notice) {
+    if let Err(error) = app.emit_to(NOTCH, NOTICE_EVENT, notice) {
+        eprintln!("falha ao emitir {NOTICE_EVENT}: {error}");
+    }
 }
 
 /// Aplica as configurações do notch: borda, e se ele aparece ou não. Trocar

@@ -1,4 +1,6 @@
+import { isTauri } from '@tauri-apps/api/core';
 import {
+  BellRing,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -24,6 +26,7 @@ import {
   notchSetLayout,
   type NotchBorder,
   type NotchLayout,
+  type NotchNotice,
   type NotchPosition,
   type NotchTheme,
   type Settings,
@@ -40,6 +43,7 @@ import {
   MINI_PLAYER_WIDTH,
   notchShape,
 } from '@/notch/shape';
+import { subscribeNotchNotice } from '@/lib/events';
 import { reportNotchFailure } from '@/notch/shared';
 import { TasksTab } from '@/notch/TasksTab';
 import { TimerTab } from '@/notch/TimerTab';
@@ -65,6 +69,8 @@ const WHEEL_COOLDOWN_MS = 320;
 const MEDIA_POLL_MS = 2_000;
 /** Distância, em px, entre os ícones do seletor de abas. */
 const RAIL_STEP = 34;
+/** Quanto tempo o aviso de fim de sessão (`notch:notice`) fica na tela. */
+export const NOTICE_MS = 3_000;
 
 const HANDLE_ICON = { top: ChevronDown, left: ChevronRight, right: ChevronLeft } as const;
 
@@ -80,12 +86,13 @@ interface NotchTab {
   render: (stacked: boolean) => React.JSX.Element;
 }
 
+const TIMER_TAB = 'timer';
 const MEDIA_TAB = 'media';
 
 /** Abas do notch, na ordem do seletor. Novas abas entram aqui. */
 const TABS: readonly NotchTab[] = [
   {
-    id: 'timer',
+    id: TIMER_TAB,
     label: 'Timer',
     icon: Timer,
     color: 'text-accent',
@@ -177,6 +184,31 @@ function NotchBorderGlow({
         <span className="notch-border-flow" />
       </span>
     </span>
+  );
+}
+
+/**
+ * Aviso de fim de sessão, por cima da aba Timer. Continua montado ao sumir,
+ * para o texto não desaparecer antes do esmaecimento.
+ */
+function NoticeBanner({ notice, visible }: { notice: NotchNotice | null; visible: boolean }) {
+  return (
+    <div
+      role="status"
+      aria-hidden={!visible}
+      style={{ backgroundColor: 'var(--notch-surface)' }}
+      className={`absolute inset-0 z-10 flex flex-col items-center justify-center gap-1.5 px-3 text-center transition-opacity duration-200 ${
+        visible ? 'opacity-100' : 'pointer-events-none opacity-0'
+      }`}
+    >
+      {notice ? (
+        <>
+          <BellRing size={18} aria-hidden="true" className="text-accent" />
+          <p className="font-display text-xl leading-tight font-semibold">{notice.title}</p>
+          <p className="text-xs text-white/70">{notice.body}</p>
+        </>
+      ) : null}
+    </div>
   );
 }
 
@@ -282,6 +314,20 @@ function NotchPanel({ position }: { position: NotchPosition }) {
   const pinnedRef = useRef(false);
   const pending = useRef<number | undefined>(undefined);
   const lastWheel = useRef(0);
+  /** O mouse está sobre o notch. */
+  const hovered = useRef(false);
+
+  /** Último aviso de fim de sessão; `noticeVisible` diz se ainda está na tela. */
+  const [notice, setNotice] = useState<NotchNotice | null>(null);
+  const [noticeVisible, setNoticeVisible] = useState(false);
+  const noticeTimer = useRef<number | undefined>(undefined);
+  const restoreTimer = useRef<number | undefined>(undefined);
+  /**
+   * A aba em que o notch estava quando um aviso o abriu sozinho; ao recolher,
+   * ela volta. `null` quando o painel não foi aberto por um aviso — ou quando
+   * o mouse entrou e o painel passou a ser do usuário.
+   */
+  const tabBeforeNotice = useRef<string | null>(null);
 
   const open = layout !== 'collapsed';
   const tab = Math.max(
@@ -292,6 +338,8 @@ function NotchPanel({ position }: { position: NotchPosition }) {
   useEffect(
     () => () => {
       window.clearTimeout(pending.current);
+      window.clearTimeout(noticeTimer.current);
+      window.clearTimeout(restoreTimer.current);
     },
     [],
   );
@@ -348,6 +396,61 @@ function NotchPanel({ position }: { position: NotchPosition }) {
     [transitionTo],
   );
 
+  // Fim de um foco ou de uma pausa: recolhido, o notch abre na aba Timer com
+  // o aviso e, passado `NOTICE_MS`, recolhe e volta à aba em que estava. Já
+  // aberto (mouse em cima ou fixado), mostra o aviso sem trocar de aba nem
+  // recolher.
+  const showNotice = useCallback(
+    (next: NotchNotice) => {
+      const { notch } = useSettingsStore.getState().settings;
+      if (!notch.enabled || !notch.notices) return;
+
+      window.clearTimeout(noticeTimer.current);
+      window.clearTimeout(restoreTimer.current);
+      setNotice(next);
+      setNoticeVisible(true);
+      if (wanted.current === 'collapsed') {
+        tabBeforeNotice.current ??= tabIdRef.current;
+        selectTab(TIMER_TAB);
+        expand();
+      }
+
+      noticeTimer.current = window.setTimeout(() => {
+        setNoticeVisible(false);
+        const previous = tabBeforeNotice.current;
+        if (previous === null) return;
+        if (hovered.current || pinnedRef.current) {
+          tabBeforeNotice.current = null;
+          return;
+        }
+        transitionTo('collapsed');
+        // Só depois de recolher, para a troca de aba não aparecer. Um aviso
+        // que chegue antes disso cancela a volta e mantém `previous`.
+        restoreTimer.current = window.setTimeout(() => {
+          tabBeforeNotice.current = null;
+          selectTab(previous);
+        }, ANIMATION_MS);
+      }, NOTICE_MS);
+    },
+    [expand, selectTab, transitionTo],
+  );
+
+  useEffect(() => {
+    if (!isTauri()) return;
+    let disposed = false;
+    let unsubscribe: (() => void) | undefined;
+    subscribeNotchNotice(showNotice)
+      .then((stop) => {
+        if (disposed) stop();
+        else unsubscribe = stop;
+      })
+      .catch(reportNotchFailure);
+    return () => {
+      disposed = true;
+      unsubscribe?.();
+    };
+  }, [showNotice]);
+
   // Enquanto o painel está aberto, o player (completo ou compacto) acompanha a mídia.
   useEffect(() => {
     if (!open) return;
@@ -396,8 +499,15 @@ function NotchPanel({ position }: { position: NotchPosition }) {
   return (
     <div
       className={`flex h-screen w-screen overflow-hidden ${edge.window}`}
-      onMouseEnter={expand}
+      onMouseEnter={() => {
+        hovered.current = true;
+        // O usuário assumiu o painel: o aviso não o recolhe mais.
+        tabBeforeNotice.current = null;
+        window.clearTimeout(restoreTimer.current);
+        expand();
+      }}
       onMouseLeave={() => {
+        hovered.current = false;
         if (!pinnedRef.current) collapse(COLLAPSE_DELAY_MS);
       }}
       onWheel={onWheel}
@@ -460,7 +570,7 @@ function NotchPanel({ position }: { position: NotchPosition }) {
 
             {/* A aba e, ao lado (topo) ou abaixo (laterais), o player compacto. */}
             <div className={`flex min-h-0 min-w-0 flex-1 gap-3 ${side ? 'flex-col' : ''}`}>
-              <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
+              <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
                 {/* Trilho com as abas em fila; desliza até a ativa. */}
                 <div
                   style={trackStyle}
@@ -481,6 +591,10 @@ function NotchPanel({ position }: { position: NotchPosition }) {
                     </div>
                   ))}
                 </div>
+                <NoticeBanner
+                  notice={notice}
+                  visible={noticeVisible && tabs[tab]?.id === TIMER_TAB}
+                />
               </div>
 
               {showMiniPlayer ? (

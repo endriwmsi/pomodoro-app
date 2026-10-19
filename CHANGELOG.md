@@ -5,6 +5,15 @@ Mudanças relevantes para usuários e desenvolvedores. Formato inspirado em
 
 ## [Não lançado]
 
+### Adicionado
+
+- **Aviso no notch ao fim de cada foco e pausa.** Quando uma sessão termina, o notch se abre
+  sozinho na aba Timer, mostra o que terminou e o que vem a seguir (o mesmo texto da
+  notificação do Windows) e se recolhe depois de uns 3 segundos, voltando à aba em que estava.
+  Com o mouse sobre o notch ou o painel fixado, o aviso aparece sem recolher. Opção em
+  Configurações → Notch (ligada por padrão). Novo evento `notch:notice`, enviado só à janela do
+  notch, e campo de configuração `notch.notices`.
+
 ## [0.3.1] — 2026-10-15
 
 ### Corrigido
