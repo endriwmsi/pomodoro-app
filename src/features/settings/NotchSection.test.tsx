@@ -84,7 +84,7 @@ describe('NotchSection — borda animada', () => {
   });
 });
 
-describe('NotchSection — aviso de fim de sessão', () => {
+describe('NotchSection — avisos no notch', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     commands.updateSettings.mockImplementation((settings) => Promise.resolve(settings));
@@ -97,7 +97,7 @@ describe('NotchSection — aviso de fim de sessão', () => {
   it('vem ligado e grava ao desligar', async () => {
     render(<NotchSection />);
     const checkbox = screen.getByRole('checkbox', {
-      name: 'Avisar no notch quando um foco ou uma pausa terminar',
+      name: 'Avisar no notch ao fim de cada foco e pausa e no início das rotinas',
     });
     expect(checkbox).toBeChecked();
 

@@ -173,12 +173,12 @@ export function NotchSection() {
             update({ notices });
           }}
         >
-          Avisar no notch quando um foco ou uma pausa terminar
+          Avisar no notch ao fim de cada foco e pausa e no início das rotinas
         </CheckboxField>
       </div>
       <p className="mt-2 text-xs text-ink-muted">
         O notch se abre na aba Timer por alguns segundos, mostrando o que terminou e o que vem a
-        seguir, e se recolhe sozinho.
+        seguir (ou a rotina que começou), e se recolhe sozinho.
       </p>
 
       <div className="mt-4">

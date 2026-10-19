@@ -228,13 +228,19 @@ Para ajustar o desenho no navegador, sem o aplicativo: `npm run dev` e abra
 4. **Fixar:** o botão de alfinete mantém o painel aberto mesmo com o mouse fora; clicar de novo
    solta.
 
-### Aviso de fim de sessão
+### Avisos no notch
 
-Quando um foco ou uma pausa **termina** (conclusão pelo tempo, a mesma regra "exatamente uma
-vez" do som e da notificação — ver [NOTIFICATIONS.md](NOTIFICATIONS.md)), o backend envia
-`notch:notice` só à janela do notch, com título e texto de `completion_message` (por exemplo
-"Foco concluído" / "Hora de uma pausa curta (5 min)."). Pular, reiniciar ou interromper não
-avisa.
+O backend envia `notch:notice` só à janela do notch, com título e texto, nos mesmos momentos —
+e com a mesma regra de "uma vez por ocorrência" — do som e da notificação do Windows (ver
+[NOTIFICATIONS.md](NOTIFICATIONS.md)):
+
+| Quando                                         | Título e texto (função em `notifications/`)                                 |
+| ---------------------------------------------- | --------------------------------------------------------------------------- |
+| Um foco ou uma pausa termina pelo tempo        | `completion_message`: "Foco concluído" / "Hora de uma pausa curta (5 min)." |
+| Uma rotina começa ([ROUTINES.md](ROUTINES.md)) | `routine_message`: o nome da rotina / a duração e que o timer volta ao foco |
+
+Pular, reiniciar ou interromper uma sessão não avisa. O fim do expediente também não abre o
+notch (só toca o som e mostra a notificação do Windows).
 
 - **Recolhido:** o notch abre na aba **Timer**, mostra o aviso por cima do conteúdo da aba
   (`NoticeBanner`, em `NotchApp.tsx`) e, depois de `NOTICE_MS` (3 s), recolhe sozinho e volta à

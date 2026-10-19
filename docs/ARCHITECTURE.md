@@ -130,7 +130,7 @@ interface Settings {
     position: 'top' | 'left' | 'right';
     theme: 'dark' | 'light' | 'system'; // cor do notch
     border: { enabled: boolean; style: 'rainbow' | 'solid'; color: string }; // #rrggbb
-    notices: boolean; // abrir com um aviso ao fim de cada foco e pausa
+    notices: boolean; // abrir com um aviso ao fim de focos e pausas e no início de rotinas
   };
   alerts: { soundEnabled: boolean; notificationsEnabled: boolean };
   goals: { dailyPomodoros: number | null }; // 1–50, ou null
@@ -168,7 +168,7 @@ nesse caso.
 | `tasks:changed`    | —                                 | Depois de qualquer alteração no quadro e ao concluir um foco                   | `lib/events.ts` → `stores/tasks.ts`    |
 | `routines:changed` | —                                 | Depois de criar, alterar ou excluir uma rotina                                 | `lib/events.ts` → `stores/routines.ts` |
 | `app:navigate`     | nome da tela (`string`)           | Bandeja ou notch pedem uma tela; enviado só à janela `main`                    | `lib/events.ts` → `app/App.tsx`        |
-| `notch:notice`     | `{ title: string; body: string }` | Um foco ou uma pausa foi concluído; enviado só à janela `notch`                | `lib/events.ts` → `notch/NotchApp.tsx` |
+| `notch:notice`     | `{ title: string; body: string }` | Um foco ou uma pausa foi concluído, ou uma rotina começou; só à janela `notch` | `lib/events.ts` → `notch/NotchApp.tsx` |
 
 `timer:state`, `settings:changed` e `tasks:changed` vão para todas as janelas: é assim que a janela principal e
 o notch permanecem sincronizados sem estado próprio. A interface também usa o evento interno

@@ -5,6 +5,12 @@ Mudanças relevantes para usuários e desenvolvedores. Formato inspirado em
 
 ## [Não lançado]
 
+### Adicionado
+
+- **O início de uma rotina também abre o notch** por uns 3 segundos, com o nome da rotina e a
+  duração dela, como já acontece ao fim de cada foco e pausa. Usa o mesmo evento
+  `notch:notice` e a mesma opção em Configurações → Notch, cujo texto passa a citar as rotinas.
+
 ## [0.3.2] — 2026-10-19
 
 ### Adicionado

@@ -156,7 +156,7 @@ pub fn set_layout(app: &AppHandle, layout: Layout) -> tauri::Result<()> {
     apply(app)
 }
 
-/// Evento enviado só ao notch quando um foco ou uma pausa termina.
+/// Evento enviado só ao notch ao fim de um foco ou pausa e no início de uma rotina.
 pub const NOTICE_EVENT: &str = "notch:notice";
 
 /// Aviso que o notch mostra por alguns segundos (payload de `notch:notice`).

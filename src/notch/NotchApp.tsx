@@ -69,7 +69,7 @@ const WHEEL_COOLDOWN_MS = 320;
 const MEDIA_POLL_MS = 2_000;
 /** Distância, em px, entre os ícones do seletor de abas. */
 const RAIL_STEP = 34;
-/** Quanto tempo o aviso de fim de sessão (`notch:notice`) fica na tela. */
+/** Quanto tempo um aviso (`notch:notice`) fica na tela. */
 export const NOTICE_MS = 3_000;
 
 const HANDLE_ICON = { top: ChevronDown, left: ChevronRight, right: ChevronLeft } as const;
@@ -188,7 +188,7 @@ function NotchBorderGlow({
 }
 
 /**
- * Aviso de fim de sessão, por cima da aba Timer. Continua montado ao sumir,
+ * Aviso (fim de sessão ou início de rotina), por cima da aba Timer. Continua montado ao sumir,
  * para o texto não desaparecer antes do esmaecimento.
  */
 function NoticeBanner({ notice, visible }: { notice: NotchNotice | null; visible: boolean }) {
@@ -317,7 +317,7 @@ function NotchPanel({ position }: { position: NotchPosition }) {
   /** O mouse está sobre o notch. */
   const hovered = useRef(false);
 
-  /** Último aviso de fim de sessão; `noticeVisible` diz se ainda está na tela. */
+  /** Último aviso recebido; `noticeVisible` diz se ainda está na tela. */
   const [notice, setNotice] = useState<NotchNotice | null>(null);
   const [noticeVisible, setNoticeVisible] = useState(false);
   const noticeTimer = useRef<number | undefined>(undefined);
@@ -396,7 +396,7 @@ function NotchPanel({ position }: { position: NotchPosition }) {
     [transitionTo],
   );
 
-  // Fim de um foco ou de uma pausa: recolhido, o notch abre na aba Timer com
+  // Fim de um foco ou de uma pausa, ou início de uma rotina: recolhido, o notch abre na aba Timer com
   // o aviso e, passado `NOTICE_MS`, recolhe e volta à aba em que estava. Já
   // aberto (mouse em cima ou fixado), mostra o aviso sem trocar de aba nem
   // recolher.

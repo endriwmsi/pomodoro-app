@@ -55,7 +55,7 @@ export interface NotchSettings {
   position: NotchPosition;
   theme: NotchTheme;
   border: NotchBorder;
-  /** Abrir o notch por alguns segundos, com um aviso, quando um foco ou uma pausa termina. */
+  /** Abrir o notch por alguns segundos, com um aviso, ao fim de um foco ou pausa e no início de uma rotina. */
   notices: boolean;
 }
 
@@ -422,7 +422,7 @@ export interface NotchNotice {
   body: string;
 }
 
-/** Enviado só ao notch quando um foco ou uma pausa termina. */
+/** Enviado só ao notch ao fim de um foco ou pausa e no início de uma rotina. */
 export const NOTCH_NOTICE_EVENT = 'notch:notice';
 
 /** Ajusta o tamanho da janela do notch (só faz sentido na janela do notch). */

@@ -16,7 +16,7 @@ A sequência, a partir do instante em que o tempo ativo atinge a duração plane
    - mostra a notificação do Windows, se `alerts.notificationsEnabled`;
 5. o notch recebe `notch:notice` com o mesmo título e texto e, se `notch.notices` estiver ligado,
    abre por 3 s mostrando o aviso — ver
-   [WINDOW_MANAGER.md](WINDOW_MANAGER.md#aviso-de-fim-de-sessão).
+   [WINDOW_MANAGER.md](WINDOW_MANAGER.md#avisos-no-notch).
 
 As estatísticas não precisam de passo próprio: serão calculadas das sessões gravadas (Fase 7).
 
@@ -53,7 +53,9 @@ Com o aplicativo aberto no momento, e respeitando as mesmas preferências de som
 | O expediente acaba | o do fim de pausa | "Expediente encerrado"                                                 |
 
 Cada aviso acontece uma vez por ocorrência (`Notifier::routine_started` e
-`Notifier::workday_ended`, chamados pelo serviço do timer na passagem). Ver
+`Notifier::workday_ended`, chamados pelo serviço do timer na passagem). O início de uma rotina
+também abre o notch com o mesmo título e texto, se `notch.notices` estiver ligado (ver
+[WINDOW_MANAGER.md](WINDOW_MANAGER.md#avisos-no-notch)). Ver
 [ROUTINES.md](ROUTINES.md).
 
 ## Som

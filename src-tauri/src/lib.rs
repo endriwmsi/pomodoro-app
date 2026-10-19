@@ -64,6 +64,8 @@ impl Notifier for AppNotifier {
 
     fn routine_started(&self, routine: &routines::Routine) {
         self.alerts.routine_started(routine);
+        let (title, body) = notifications::routine_message(routine);
+        windows::notch::announce(&self.app, &windows::notch::Notice { title, body });
     }
 
     fn workday_ended(&self) {

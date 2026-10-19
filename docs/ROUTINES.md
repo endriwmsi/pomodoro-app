@@ -160,7 +160,8 @@ Erros: `validation` com o campo (`name`, `startMinute`, `durationMinutes`, `week
   Enter (gravar a cada tecla recusaria horários intermediários, como 01:00 ao digitar "17").
 - **Pomodoro e notch:** durante uma rotina, o relógio mostra quanto falta para ela acabar, com o
   nome dela e "Pular a rotina"; fora dela, a próxima rotina de hoje e o rótulo "Foco curto"
-  quando a sessão foi encurtada.
+  quando a sessão foi encurtada. Quando a rotina começa, o notch se abre por uns 3 s com o nome
+  e a duração dela (ver [WINDOW_MANAGER.md](WINDOW_MANAGER.md#avisos-no-notch)).
 
 O que a interface mostra sobre horários (próxima rotina, faixa do dia) é calculado no frontend,
 só para exibição (`features/routines/schedule.ts`); o comportamento do timer é sempre do backend.

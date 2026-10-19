@@ -191,7 +191,7 @@ Fonte de verdade: `src-tauri/src/settings/mod.rs`.
 | `notch.border.enabled`              | `false`               | —                                                                                        |
 | `notch.border.style`                | `rainbow`             | `rainbow`, `solid`                                                                       |
 | `notch.border.color`                | `#f59e0b`             | `#` e seis dígitos hexadecimais (vale mesmo com a borda desligada)                       |
-| `notch.notices`                     | `true`                | — (abre o notch por 3 s ao fim de cada foco e pausa)                                     |
+| `notch.notices`                     | `true`                | — (abre o notch por 3 s ao fim de focos e pausas e no início de rotinas)                 |
 | `alerts.soundEnabled`               | `true`                | —                                                                                        |
 | `alerts.notificationsEnabled`       | `true`                | —                                                                                        |
 | `goals.dailyPomodoros`              | ausente (`null`)      | 1 – 50, ou `null` para nenhuma meta                                                      |

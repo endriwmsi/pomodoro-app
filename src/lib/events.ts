@@ -55,7 +55,7 @@ export function subscribeTasksChanged(handler: () => void): Promise<() => void> 
   });
 }
 
-/** Assina `notch:notice`: um foco ou uma pausa terminou (só a janela do notch recebe). */
+/** Assina `notch:notice`: um foco ou pausa terminou, ou uma rotina começou (só o notch recebe). */
 export function subscribeNotchNotice(handler: (notice: NotchNotice) => void): Promise<() => void> {
   return listen<NotchNotice>(NOTCH_NOTICE_EVENT, (event) => {
     handler(event.payload);

@@ -330,13 +330,15 @@ Ver [UPDATER.md](UPDATER.md) e [RELEASING.md](RELEASING.md).
 - [ ] **Publicar a primeira versão com o atualizador e ver uma instalação antiga se atualizar**
       — nada disso foi exercitado de ponta a ponta
 
-## Aviso de fim de sessão no notch (implementado; verificação no aplicativo pendente)
+## Avisos no notch: fim de sessão e início de rotina (implementados; verificação pendente)
 
-Ver [WINDOW_MANAGER.md](WINDOW_MANAGER.md#aviso-de-fim-de-sessão).
+Ver [WINDOW_MANAGER.md](WINDOW_MANAGER.md#avisos-no-notch).
 
 - [x] Evento `notch:notice` ao concluir um foco ou uma pausa; o notch abre na aba Timer com o
       aviso por 3 s e recolhe, voltando à aba anterior; opção `notch.notices` (ligada)
 - [x] Testes automatizados do comportamento (abrir, recolher, mouse em cima, fixado, desligado)
+- [x] O início de uma rotina também abre o notch com o aviso (mesmo evento e mesma opção)
+- [ ] Ver o aviso de início de rotina no aplicativo real
 - [ ] **Ver o aviso no aplicativo real** ao fim de um foco e de uma pausa, recolhido e com o
       mouse em cima, no topo e nas laterais
 
