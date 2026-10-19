@@ -1,6 +1,6 @@
 [package]
 name = "compasso"
-version = "0.3.2"
+version = "0.3.3"
 description = "Pomodoro, Kanban e estatísticas de foco para Windows"
 edition = "2021"
 rust-version = "1.80"

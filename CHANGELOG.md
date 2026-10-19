@@ -5,6 +5,8 @@ Mudanças relevantes para usuários e desenvolvedores. Formato inspirado em
 
 ## [Não lançado]
 
+## [0.3.3] — 2026-10-19
+
 ### Adicionado
 
 - **O início de uma rotina também abre o notch** por uns 3 segundos, com o nome da rotina e a
