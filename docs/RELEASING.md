@@ -68,6 +68,23 @@ exige a chave para assinar.
 Os quatro são compilados em paralelo, cada um no seu sistema — por isso o macOS não exige um
 Mac de quem publica. Se um falhar, os outros ainda são anexados à Release.
 
+### O `latest.json`
+
+Depois das quatro plataformas, o job **latest.json** (workflow reutilizável
+`.github/workflows/updater-json.yml`) baixa os `.sig` da Release, monta o arquivo com
+`scripts/updater-json.mjs` — uma entrada por plataforma, com a assinatura e o endereço do
+pacote, e as notas da versão tiradas do CHANGELOG — e o publica, substituindo o anterior. Ele
+roda mesmo se uma plataforma falhar (ela só fica fora do arquivo), mas recusa gerar um arquivo
+sem o Windows.
+
+Os jobs de compilação **não** escrevem o `latest.json` (`includeUpdaterJson: false` no
+`tauri-action`): cada um o reescrevia lendo a cópia publicada, e, terminando juntos, um apagava
+as entradas do outro — na v0.3.3 o arquivo ficou só com o Windows e o job do macOS (Apple
+Silicon) falhou com `Not Found - update a release asset`.
+
+Para refazer o `latest.json` de uma Release já publicada: **Actions → latest.json → Run
+workflow**, informando a tag (`v0.3.3`). Usa o `scripts/` e o CHANGELOG da `main`.
+
 ### Linux e macOS: o que esperar
 
 O Compasso foi feito e verificado no Windows. Nos outros sistemas o código **compila e passa

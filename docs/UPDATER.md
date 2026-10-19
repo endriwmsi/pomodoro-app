@@ -20,7 +20,8 @@ roube o secret.
 
 1. `npm run release` (ver [RELEASING.md](RELEASING.md)) cria a tag; o workflow **Release**
    compila, assina cada pacote (`TAURI_SIGNING_PRIVATE_KEY`) e anexa à Release do GitHub os
-   instaladores, os arquivos `.sig` e o `latest.json`.
+   instaladores e os arquivos `.sig`; por último, um job único gera o `latest.json` a partir
+   deles (ver [RELEASING.md](RELEASING.md#o-latestjson)).
 2. O aplicativo consulta
    `https://github.com/endriwmsi/pomodoro-app/releases/latest/download/latest.json` — uma
    requisição `GET` simples, sem enviar dados do usuário (o plugin acrescenta só o sistema, a

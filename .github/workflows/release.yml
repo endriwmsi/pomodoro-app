@@ -114,4 +114,18 @@ jobs:
             Os instaladores não são assinados: o Windows SmartScreen e o Gatekeeper do macOS mostram um aviso ao abrir.
           releaseDraft: false
           prerelease: false
+          # O `latest.json` é gerado uma vez só, pelo job seguinte: com cada
+          # plataforma reescrevendo o arquivo, jobs que terminavam juntos
+          # apagavam as entradas uns dos outros (v0.3.3).
+          includeUpdaterJson: false
           args: ${{ matrix.args }}
+
+  # Roda mesmo se uma plataforma falhar: as que publicaram continuam se
+  # atualizando. Sem o pacote do Windows, o script recusa gerar o arquivo.
+  updater-json:
+    name: latest.json
+    needs: [version, build]
+    if: ${{ !cancelled() && needs.version.result == 'success' }}
+    uses: ./.github/workflows/updater-json.yml
+    with:
+      tag: ${{ github.ref_name }}

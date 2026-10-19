@@ -1,0 +1,43 @@
+# Gera e publica o `latest.json` de uma Release, que os aplicativos instalados
+# consultam para se atualizar. Roda uma única vez, depois de todas as
+# plataformas: chamado pelo workflow Release ou à mão (Actions → latest.json →
+# Run workflow) para refazer o arquivo de uma Release já publicada.
+# Ver docs/RELEASING.md.
+name: latest.json
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag da Release (ex.: v0.3.3)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  manifest:
+    name: Gerar o latest.json
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ inputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Baixar as assinaturas dos pacotes
+        run: gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern '*.sig' --dir sigs
+      - name: Montar o latest.json
+        run: |
+          node scripts/updater-json.mjs sigs "$TAG" "$GITHUB_REPOSITORY" > latest.json
+          cat latest.json
+      - name: Publicar na Release
+        run: gh release upload "$TAG" latest.json --repo "$GITHUB_REPOSITORY" --clobber

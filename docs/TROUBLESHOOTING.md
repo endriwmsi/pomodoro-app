@@ -11,6 +11,17 @@ recente do TypeScript é a 7.
 **Solução:** manter `typescript` em `~6.0.3` no `package.json`. Só atualizar quando o
 `typescript-eslint` declarar suporte (ver [ADR-001](decisions/ADR-001-TECH-STACK.md)).
 
+## Release com o `latest.json` incompleto e um job falhando em "update a release asset" — _observado_
+
+**Causa:** na v0.3.3 os quatro jobs de compilação terminaram no mesmo minuto, e cada um
+reescrevia o `latest.json` lendo a cópia publicada. O job do macOS (Apple Silicon) falhou com
+`Not Found - update a release asset`, e o arquivo final ficou só com o Windows — Linux e macOS
+não viam a versão nova. Os instaladores foram todos publicados.
+
+**Solução:** o arquivo passou a ser gerado uma vez, depois de todos os jobs (ver
+[RELEASING.md](RELEASING.md#o-latestjson)). Para consertar uma Release antiga, rode o workflow
+**latest.json** à mão com a tag dela.
+
 ## `npm run tauri dev` falha porque a porta 1420 está ocupada — _previsto_
 
 **Causa:** a porta é fixa (`strictPort`) e já há um Vite rodando — normalmente um `npm run dev`

@@ -5,6 +5,14 @@ Mudanças relevantes para usuários e desenvolvedores. Formato inspirado em
 
 ## [Não lançado]
 
+### Corrigido
+
+- O workflow Release gerava um `latest.json` incompleto quando as plataformas terminavam ao
+  mesmo tempo: na v0.3.3 ele ficou só com o Windows (Linux e macOS não veriam a atualização) e
+  o job do macOS (Apple Silicon) falhou. Agora os jobs de compilação não escrevem o arquivo; um
+  job final o monta a partir das assinaturas publicadas (`scripts/updater-json.mjs`, workflow
+  `updater-json.yml`), que também pode ser rodado à mão para refazer o arquivo de uma Release.
+
 ## [0.3.3] — 2026-10-19
 
 ### Adicionado
