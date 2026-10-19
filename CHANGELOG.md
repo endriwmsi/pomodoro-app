@@ -5,6 +5,8 @@ Mudanças relevantes para usuários e desenvolvedores. Formato inspirado em
 
 ## [Não lançado]
 
+## [0.3.2] — 2026-10-19
+
 ### Adicionado
 
 - **Aviso no notch ao fim de cada foco e pausa.** Quando uma sessão termina, o notch se abre
